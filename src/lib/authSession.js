@@ -49,7 +49,6 @@ export function signSessionToken(claims, secret = DEFAULT_SECRET) {
   };
 
   const payload = {
-    ...claims,
     sub: String(claims.sub),
     role: String(claims.role),
     tenantId: String(claims.tenantId || "default"),

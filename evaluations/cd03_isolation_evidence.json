@@ -1,22 +1,19 @@
 {
   "ticket": "CD03",
-  "title": "Tenant Isolation and Secret Protection Acceptance Evidence",
-  "timestamp": "2026-11-06T13:00:53.810Z",
+  "title": "Tenant Isolation and Secret Protection Baseline Evidence",
+  "timestamp": "2026-11-03T18:38:21.395Z",
   "summary": {
-    "total_tests": 61,
-    "passed": 61,
+    "total_tests": 32,
+    "passed": 32,
     "failed": 0,
     "all_passed": true
   },
   "guarantees": {
     "tenant_isolation": "ENFORCED (Derived strictly from verified server session; cross-tenant spoofing rejected with 403 Forbidden)",
     "public_routing": "ISOLATED (Routing parameters separated from authorization; chatbot lead submission preserved)",
-    "rtdb_security_rules": "HARDENED (Parent /tenants read denied; child writes locked down; 0 Firestore syntax)",
+    "rtdb_security_rules": "HARDENED (Parent /tenants read denied; settings/email_config restricted; 0 Firestore syntax)",
     "secret_protection": "REDACTED (Passwords, SMTP credentials, OAuth tokens, and canaries masked across API responses)",
-    "global_sender_fallback": "GUARDED (Requires explicit allowGlobalSenderFallback: true permission per tenant)",
-    "oauth_state_protection": "SECURED (OAuth initiate requires superadmin session; callback requires verified HMAC signed state)",
-    "administrative_workers": "ISOLATED (Scheduled reminders store tenant_id and resolve per-tenant transporter)",
-    "server_mediated_dashboard": "ENFORCED (Dashboard views fall back to authenticated server APIs when direct RTDB access is denied)"
+    "global_sender_fallback": "GUARDED (Requires explicit allowGlobalSenderFallback: true permission per tenant)"
   },
   "results": [
     {
@@ -28,7 +25,7 @@
         "statusCode": 200,
         "tenantId": "tenant_a"
       },
-      "timestamp": "2026-11-06T13:00:28.710Z"
+      "timestamp": "2026-11-03T18:10:40.110Z"
     },
     {
       "test_id": "AC1.2",
@@ -41,7 +38,7 @@
           "error": "Cross-tenant access forbidden. Operator session is bound to tenant 'tenant_a', but requested tenant 'tenant_b'."
         }
       },
-      "timestamp": "2026-11-06T13:00:29.328Z"
+      "timestamp": "2026-11-03T18:10:40.719Z"
     },
     {
       "test_id": "AC1.3",
@@ -54,7 +51,7 @@
           "error": "Cross-tenant access forbidden. Operator session is bound to tenant 'tenant_a', but requested tenant 'tenant_b'."
         }
       },
-      "timestamp": "2026-11-06T13:00:29.942Z"
+      "timestamp": "2026-11-03T18:10:41.329Z"
     },
     {
       "test_id": "AC1.4",
@@ -67,7 +64,7 @@
           "error": "Cross-tenant access forbidden. Operator session is bound to tenant 'tenant_a', but requested tenant 'tenant_b'."
         }
       },
-      "timestamp": "2026-11-06T13:00:30.560Z"
+      "timestamp": "2026-11-03T18:10:41.947Z"
     },
     {
       "test_id": "AC1.5",
@@ -80,7 +77,7 @@
           "error": "Cross-tenant access forbidden. Operator session is bound to tenant 'tenant_a', but requested tenant 'tenant_b'."
         }
       },
-      "timestamp": "2026-11-06T13:00:31.176Z"
+      "timestamp": "2026-11-03T18:10:42.558Z"
     },
     {
       "test_id": "AC1.6",
@@ -93,7 +90,7 @@
           "error": "Cross-tenant access forbidden. Operator session is bound to tenant 'tenant_a', but requested tenant 'tenant_b'."
         }
       },
-      "timestamp": "2026-11-06T13:00:31.788Z"
+      "timestamp": "2026-11-03T18:10:43.168Z"
     },
     {
       "test_id": "AC1.7",
@@ -106,7 +103,7 @@
           "error": "Cross-tenant access forbidden. Operator session is bound to tenant 'tenant_a', cannot query logs for 'tenant_b'."
         }
       },
-      "timestamp": "2026-11-06T13:00:32.410Z"
+      "timestamp": "2026-11-03T18:10:43.781Z"
     },
     {
       "test_id": "AC1.8",
@@ -117,45 +114,7 @@
         "statusCode": 200,
         "logsCount": 0
       },
-      "timestamp": "2026-11-06T13:00:34.239Z"
-    },
-    {
-      "test_id": "AC1.9",
-      "name": "Cross-tenant cookie data review tampering rejected (/api/cookie-consent with tenant_b -> 403)",
-      "status": "PASS",
-      "details": "Expected status 403 Forbidden, got 403 ({\"error\":\"Cross-tenant access forbidden. Operator session is bound to tenant 'tenant_a', but requested tenant 'tenant_b'.\"})",
-      "evidence": {
-        "statusCode": 403,
-        "body": {
-          "error": "Cross-tenant access forbidden. Operator session is bound to tenant 'tenant_a', but requested tenant 'tenant_b'."
-        }
-      },
-      "timestamp": "2026-11-06T13:00:34.860Z"
-    },
-    {
-      "test_id": "AC1.10",
-      "name": "Operator password rotation bound strictly to session tenant identity",
-      "status": "PASS",
-      "details": "Got status 404 verifying identity bound to session",
-      "evidence": {
-        "statusCode": 404
-      },
-      "timestamp": "2026-11-06T13:00:36.691Z"
-    },
-    {
-      "test_id": "AC1.11",
-      "name": "Atomic multi-path write defense: Path traversal sequences and slashes stripped from write payload",
-      "status": "PASS",
-      "details": "Sanitized keys: name, tenantstenant_bleadsinjected, superAdmininjected, tenant_id",
-      "evidence": {
-        "sanitizedKeys": [
-          "name",
-          "tenantstenant_bleadsinjected",
-          "superAdmininjected",
-          "tenant_id"
-        ]
-      },
-      "timestamp": "2026-11-06T13:00:36.691Z"
+      "timestamp": "2026-11-03T18:10:45.604Z"
     },
     {
       "test_id": "AC2.1",
@@ -168,7 +127,7 @@
           "error": "Authentication required. Active session missing or expired."
         }
       },
-      "timestamp": "2026-11-06T13:00:36.692Z"
+      "timestamp": "2026-11-03T18:10:45.605Z"
     },
     {
       "test_id": "AC2.2",
@@ -181,7 +140,7 @@
           "error": "Authentication required. Active session missing or expired."
         }
       },
-      "timestamp": "2026-11-06T13:00:36.693Z"
+      "timestamp": "2026-11-03T18:10:45.605Z"
     },
     {
       "test_id": "AC2.3",
@@ -194,7 +153,7 @@
           "error": "Authentication required. Active session missing or expired."
         }
       },
-      "timestamp": "2026-11-06T13:00:36.693Z"
+      "timestamp": "2026-11-03T18:10:45.605Z"
     },
     {
       "test_id": "AC2.4",
@@ -207,7 +166,7 @@
           "error": "Authentication required. Active session missing or expired."
         }
       },
-      "timestamp": "2026-11-06T13:00:36.694Z"
+      "timestamp": "2026-11-03T18:10:45.606Z"
     },
     {
       "test_id": "AC2.5",
@@ -220,50 +179,7 @@
           "error": "Unauthorized. Authentication required."
         }
       },
-      "timestamp": "2026-11-06T13:00:36.696Z"
-    },
-    {
-      "test_id": "AC2.6",
-      "name": "Anonymous GET /api/cookie-consent rejected with 401 Unauthorized",
-      "status": "PASS",
-      "details": "Expected status 401, got 401 ({\"error\":\"Authentication required. Active session missing or expired.\"})",
-      "evidence": {
-        "statusCode": 401,
-        "body": {
-          "error": "Authentication required. Active session missing or expired."
-        }
-      },
-      "timestamp": "2026-11-06T13:00:36.697Z"
-    },
-    {
-      "test_id": "AC2.7",
-      "name": "Anonymous POST /api/user/password rejected with 401 Unauthorized",
-      "status": "PASS",
-      "details": "Expected status 401, got 401",
-      "evidence": {
-        "statusCode": 401
-      },
-      "timestamp": "2026-11-06T13:00:36.697Z"
-    },
-    {
-      "test_id": "AC2.8",
-      "name": "Anonymous GET /api/superadmin/settings rejected with 401 Unauthorized",
-      "status": "PASS",
-      "details": "Expected status 401, got 401",
-      "evidence": {
-        "statusCode": 401
-      },
-      "timestamp": "2026-11-06T13:00:36.697Z"
-    },
-    {
-      "test_id": "AC2.9",
-      "name": "Anonymous GET /api/superadmin/tenants rejected with 401 Unauthorized",
-      "status": "PASS",
-      "details": "Expected status 401, got 401",
-      "evidence": {
-        "statusCode": 401
-      },
-      "timestamp": "2026-11-06T13:00:36.698Z"
+      "timestamp": "2026-11-03T18:10:45.607Z"
     },
     {
       "test_id": "AC3.1",
@@ -273,7 +189,7 @@
       "evidence": {
         "statusCode": 200
       },
-      "timestamp": "2026-11-06T13:00:37.910Z"
+      "timestamp": "2026-11-03T18:10:46.820Z"
     },
     {
       "test_id": "AC3.2",
@@ -283,7 +199,7 @@
       "evidence": {
         "statusCode": 200
       },
-      "timestamp": "2026-11-06T13:00:39.125Z"
+      "timestamp": "2026-11-03T18:10:48.031Z"
     },
     {
       "test_id": "AC3.3",
@@ -294,34 +210,21 @@
         "statusCode": 200,
         "logsCount": 0
       },
-      "timestamp": "2026-11-06T13:00:40.958Z"
-    },
-    {
-      "test_id": "AC3.4",
-      "name": "SuperAdmin step-up verification required for sensitive settings mutations",
-      "status": "PASS",
-      "details": "Expected 403 Step-up required, got 403",
-      "evidence": {
-        "statusCode": 403
-      },
-      "timestamp": "2026-11-06T13:00:41.562Z"
+      "timestamp": "2026-11-03T18:38:16.944Z"
     },
     {
       "test_id": "AC4.1",
       "name": "Public chatbot lead capture POST /api/leads succeeds without requiring operator session",
       "status": "PASS",
-      "details": "Expected status 200, got 200 ({\"id\":\"lead_cd03_test_visitor_01\",\"success\":true,\"version\":1,\"lifecycle_status\":\"CONTACTED\",\"priority\":\"LOW\"})",
+      "details": "Expected status 200, got 200 ({\"id\":\"lead_cd03_test_visitor_01\",\"success\":true})",
       "evidence": {
         "statusCode": 200,
         "body": {
           "id": "lead_cd03_test_visitor_01",
-          "success": true,
-          "version": 1,
-          "lifecycle_status": "CONTACTED",
-          "priority": "LOW"
+          "success": true
         }
       },
-      "timestamp": "2026-11-06T13:00:47.664Z"
+      "timestamp": "2026-11-03T18:38:18.419Z"
     },
     {
       "test_id": "AC4.2",
@@ -335,7 +238,7 @@
         "fromOrigin": "brightstar",
         "fallback": "default"
       },
-      "timestamp": "2026-11-06T13:00:47.664Z"
+      "timestamp": "2026-11-03T18:38:18.419Z"
     },
     {
       "test_id": "AC4.3",
@@ -347,42 +250,7 @@
         "traversalAttempt2": "tenant_aleadssecrets",
         "traversalAttempt3": "tenantid"
       },
-      "timestamp": "2026-11-06T13:00:47.664Z"
-    },
-    {
-      "test_id": "AC4.4",
-      "name": "Public cookie consent POST /api/cookie-consent succeeds without requiring session",
-      "status": "PASS",
-      "details": "Expected status 200, got 200",
-      "evidence": {
-        "statusCode": 200,
-        "body": {
-          "success": true,
-          "anonId": "anon_test_cd03_01",
-          "tenantId": "tenant_a"
-        }
-      },
-      "timestamp": "2026-11-06T13:00:48.275Z"
-    },
-    {
-      "test_id": "AC4.5",
-      "name": "Intentional public configuration read (getTenantConfig) exposes zero secrets or credentials",
-      "status": "PASS",
-      "details": "Result structure: tenantId, config, appearance, chatbotConfig, businessProfile, isMultiTenant, exists, enabled, error",
-      "evidence": {
-        "keys": [
-          "tenantId",
-          "config",
-          "appearance",
-          "chatbotConfig",
-          "businessProfile",
-          "isMultiTenant",
-          "exists",
-          "enabled",
-          "error"
-        ]
-      },
-      "timestamp": "2026-11-06T13:00:49.091Z"
+      "timestamp": "2026-11-03T18:38:18.419Z"
     },
     {
       "test_id": "AC5.1",
@@ -392,7 +260,7 @@
       "evidence": {
         "hasFirestoreSyntax": false
       },
-      "timestamp": "2026-11-06T13:00:49.092Z"
+      "timestamp": "2026-11-03T18:38:18.420Z"
     },
     {
       "test_id": "AC5.2",
@@ -402,51 +270,30 @@
       "evidence": {
         "rootRead": false
       },
-      "timestamp": "2026-11-06T13:00:49.092Z"
+      "timestamp": "2026-11-03T18:38:18.420Z"
     },
     {
       "test_id": "AC5.3",
-      "name": "Root database .write is strictly false (denies global unauthenticated writes/deletes)",
-      "status": "PASS",
-      "details": "rules[\".write\"] = false",
-      "evidence": {
-        "rootWrite": false
-      },
-      "timestamp": "2026-11-06T13:00:49.092Z"
-    },
-    {
-      "test_id": "AC5.4",
       "name": "Parent /tenants node .read is false (prohibits bulk dumping /tenants.json)",
       "status": "PASS",
       "details": "rules.tenants[\".read\"] = false",
       "evidence": {
         "parentTenantsRead": false
       },
-      "timestamp": "2026-11-06T13:00:49.092Z"
+      "timestamp": "2026-11-03T18:38:18.420Z"
+    },
+    {
+      "test_id": "AC5.4",
+      "name": "settings/email_config .read is strictly restricted (denies anonymous client dump)",
+      "status": "PASS",
+      "details": "rules.settings.email_config[\".read\"] = auth != null && auth.token.role === 'superadmin'",
+      "evidence": {
+        "emailConfigRead": "auth != null && auth.token.role === 'superadmin'"
+      },
+      "timestamp": "2026-11-03T18:38:18.420Z"
     },
     {
       "test_id": "AC5.5",
-      "name": "Parent /tenants node .write is strictly restricted to SuperAdmin",
-      "status": "PASS",
-      "details": "rules.tenants[\".write\"] = auth != null && auth.token.role === 'superadmin'",
-      "evidence": {
-        "parentTenantsWrite": "auth != null && auth.token.role === 'superadmin'"
-      },
-      "timestamp": "2026-11-06T13:00:49.092Z"
-    },
-    {
-      "test_id": "AC5.6",
-      "name": "settings/email_config .read and .write strictly restricted to SuperAdmin",
-      "status": "PASS",
-      "details": "rules.settings.email_config: .read=auth != null && auth.token.role === 'superadmin', .write=auth != null && auth.token.role === 'superadmin'",
-      "evidence": {
-        "emailConfigRead": "auth != null && auth.token.role === 'superadmin'",
-        "emailConfigWrite": "auth != null && auth.token.role === 'superadmin'"
-      },
-      "timestamp": "2026-11-06T13:00:49.092Z"
-    },
-    {
-      "test_id": "AC5.7",
       "name": "system_security node is strictly locked (.read: false, .write: false)",
       "status": "PASS",
       "details": "system_security: .read=false, .write=false",
@@ -456,40 +303,17 @@
           ".write": false
         }
       },
-      "timestamp": "2026-11-06T13:00:49.093Z"
+      "timestamp": "2026-11-03T18:38:18.421Z"
     },
     {
-      "test_id": "AC5.8",
+      "test_id": "AC5.6",
       "name": "RTDB Cascade Analysis: Parent settings node denies read to prevent cascading leak of email_config",
       "status": "PASS",
       "details": "settings[\".read\"] = false",
       "evidence": {
         "parentSettingsRead": false
       },
-      "timestamp": "2026-11-06T13:00:49.093Z"
-    },
-    {
-      "test_id": "AC5.9",
-      "name": "Direct REST/SDK write lockdown: Tenant leads and user_cookies require verified token identity",
-      "status": "PASS",
-      "details": "leads.write: auth != null && (auth.token.role === 'superadmin' || auth.token.tenant_id === $tenant_id), user_cookies.write: auth != null && (auth.token.role === 'superadmin' || auth.token.tenant_id === $tenant_id)",
-      "evidence": {
-        "tenantLeadsWrite": "auth != null && (auth.token.role === 'superadmin' || auth.token.tenant_id === $tenant_id)",
-        "tenantCookiesWrite": "auth != null && (auth.token.role === 'superadmin' || auth.token.tenant_id === $tenant_id)"
-      },
-      "timestamp": "2026-11-06T13:00:49.093Z"
-    },
-    {
-      "test_id": "AC5.10",
-      "name": "Global email_alerts, scheduled_reminders, and system_logs deny anonymous REST writes",
-      "status": "PASS",
-      "details": "email_alerts.write: auth != null && auth.token.role === 'superadmin', scheduled_reminders.write: auth != null && auth.token.role === 'superadmin', logs.write: auth != null && auth.token.role === 'superadmin'",
-      "evidence": {
-        "emailAlertsWrite": "auth != null && auth.token.role === 'superadmin'",
-        "remindersWrite": "auth != null && auth.token.role === 'superadmin'",
-        "logsWrite": "auth != null && auth.token.role === 'superadmin'"
-      },
-      "timestamp": "2026-11-06T13:00:49.093Z"
+      "timestamp": "2026-11-03T18:38:18.421Z"
     },
     {
       "test_id": "AC6.1",
@@ -504,7 +328,7 @@
           "refreshToken": "[REDACTED]"
         }
       },
-      "timestamp": "2026-11-06T13:00:49.094Z"
+      "timestamp": "2026-11-03T18:38:18.421Z"
     },
     {
       "test_id": "AC6.2",
@@ -514,38 +338,18 @@
       "evidence": {
         "statusCode": 200
       },
-      "timestamp": "2026-11-06T13:00:50.517Z"
+      "timestamp": "2026-11-03T18:38:19.832Z"
     },
     {
       "test_id": "AC6.3",
-      "name": "SuperAdmin GET /api/superadmin/settings redacts email credentials in response",
-      "status": "PASS",
-      "details": "Expected status 200 without raw credentials, got statusCode=200",
-      "evidence": {
-        "statusCode": 200
-      },
-      "timestamp": "2026-11-06T13:00:51.742Z"
-    },
-    {
-      "test_id": "AC6.4",
       "name": "Source code audit: Zero hardcoded private keys or synthetic canaries in application bundles",
       "status": "PASS",
-      "details": "Scanned 122 files in src/ and public/ without secret leaks.",
+      "details": "Scanned 94 files in src/ and public/ without secret leaks.",
       "evidence": {
-        "filesScanned": 122,
+        "filesScanned": 94,
         "leaks": []
       },
-      "timestamp": "2026-11-06T13:00:51.981Z"
-    },
-    {
-      "test_id": "AC6.5",
-      "name": "Direct Firebase config audit: src/lib/firebase.js exposes only public identifiers, zero backend keys",
-      "status": "PASS",
-      "details": "Client bundle contains only public identifiers",
-      "evidence": {
-        "hasServiceAccount": false
-      },
-      "timestamp": "2026-11-06T13:00:51.982Z"
+      "timestamp": "2026-11-03T18:38:21.393Z"
     },
     {
       "test_id": "AC7.1",
@@ -555,7 +359,7 @@
       "evidence": {
         "blockedCorrectly": true
       },
-      "timestamp": "2026-11-06T13:00:51.982Z"
+      "timestamp": "2026-11-03T18:38:21.394Z"
     },
     {
       "test_id": "AC7.2",
@@ -567,7 +371,7 @@
         "usedFallback": true,
         "provider": "platform_global"
       },
-      "timestamp": "2026-11-06T13:00:51.982Z"
+      "timestamp": "2026-11-03T18:38:21.394Z"
     },
     {
       "test_id": "AC7.3",
@@ -579,7 +383,7 @@
         "usedFallback": false,
         "provider": "custom_tenant"
       },
-      "timestamp": "2026-11-06T13:00:51.982Z"
+      "timestamp": "2026-11-03T18:38:21.394Z"
     },
     {
       "test_id": "AC7.4",
@@ -589,155 +393,7 @@
       "evidence": {
         "hasFallbackCheck": true
       },
-      "timestamp": "2026-11-06T13:00:51.983Z"
-    },
-    {
-      "test_id": "AC7.5",
-      "name": "sendEmailAlert administrative worker explicitly binds tenant_id to scheduled reminders",
-      "status": "PASS",
-      "details": "Reminders store tenant_id for per-tenant dispatch",
-      "evidence": {
-        "hasTenantInReminders": true
-      },
-      "timestamp": "2026-11-06T13:00:51.983Z"
-    },
-    {
-      "test_id": "AC7.6",
-      "name": "processScheduledReminders administrative worker resolves transporter per tenant and respects fallback flag",
-      "status": "PASS",
-      "details": "processScheduledReminders uses per-tenant transporter with fallback gating",
-      "evidence": {
-        "hasPerTenantCronTransporter": true
-      },
-      "timestamp": "2026-11-06T13:00:51.983Z"
-    },
-    {
-      "test_id": "AC8.1",
-      "name": "Unauthenticated visitors rejected from initiating OAuth connection (401 Unauthorized)",
-      "status": "PASS",
-      "details": "Google: 401, Microsoft: 401",
-      "evidence": {
-        "googleStatus": 401,
-        "msStatus": 401
-      },
-      "timestamp": "2026-11-06T13:00:51.983Z"
-    },
-    {
-      "test_id": "AC8.2",
-      "name": "OAuth callback without valid cryptographic state rejected with 403 Forbidden",
-      "status": "PASS",
-      "details": "Google CB: 403, Microsoft CB: 403",
-      "evidence": {
-        "googleCbStatus": 403,
-        "msCbStatus": 403
-      },
-      "timestamp": "2026-11-06T13:00:51.984Z"
-    },
-    {
-      "test_id": "AC8.3",
-      "name": "Authenticated SuperAdmin generates HMAC-signed state token on OAuth initiation",
-      "status": "PASS",
-      "details": "Redirected to: https://accounts.google.com/o/oauth2/v2/auth?client_id=mock-google-client-i...",
-      "evidence": {
-        "redirected": true
-      },
-      "timestamp": "2026-11-06T13:00:52.592Z"
-    },
-    {
-      "test_id": "AC8.4",
-      "name": "OAuth state single-use replay defense: Replay of consumed state token is blocked",
-      "status": "PASS",
-      "details": "First use valid=true, Second use valid=false (error: OAuth state token has already been consumed. Replay attack blocked.)",
-      "evidence": {
-        "firstUse": true,
-        "secondUse": false
-      },
-      "timestamp": "2026-11-06T13:00:52.594Z"
-    },
-    {
-      "test_id": "AC8.5",
-      "name": "OAuth state purpose validation: State issued for different purpose is rejected",
-      "status": "PASS",
-      "details": "Validation error: Invalid state purpose. Expected 'email_oauth_connect', got 'general_login'.",
-      "evidence": {
-        "valid": false,
-        "error": "Invalid state purpose. Expected 'email_oauth_connect', got 'general_login'."
-      },
-      "timestamp": "2026-11-06T13:00:52.594Z"
-    },
-    {
-      "test_id": "AC8.6",
-      "name": "OAuth state user binding validation: State token bound to different user is rejected",
-      "status": "PASS",
-      "details": "Validation error: OAuth state user binding mismatch. Issued for 'superadmin_alice', but callback received for 'superadmin_attacker'.",
-      "evidence": {
-        "valid": false,
-        "error": "OAuth state user binding mismatch. Issued for 'superadmin_alice', but callback received for 'superadmin_attacker'."
-      },
-      "timestamp": "2026-11-06T13:00:52.594Z"
-    },
-    {
-      "test_id": "AC8.7",
-      "name": "OAuth state expiry validation: Expired state token signature is rejected",
-      "status": "PASS",
-      "details": "Validation error: Session token expired",
-      "evidence": {
-        "valid": false,
-        "error": "Session token expired"
-      },
-      "timestamp": "2026-11-06T13:00:52.595Z"
-    },
-    {
-      "test_id": "AC8.8",
-      "name": "Google OAuth callback rejects consumed state token with 403 (Replay defense)",
-      "status": "PASS",
-      "details": "Got status 403 with error: OAuth state token has already been consumed (replay attack rejected)",
-      "evidence": {
-        "statusCode": 403,
-        "body": {
-          "status": "error",
-          "provider": "google",
-          "error": "OAuth state token has already been consumed (replay attack rejected)"
-        }
-      },
-      "timestamp": "2026-11-06T13:00:52.597Z"
-    },
-    {
-      "test_id": "AC8.9",
-      "name": "Microsoft OAuth callback rejects consumed state token with 403 (Replay defense)",
-      "status": "PASS",
-      "details": "Got status 403 with error: OAuth state token has already been consumed (replay attack rejected)",
-      "evidence": {
-        "statusCode": 403,
-        "body": {
-          "status": "error",
-          "provider": "microsoft",
-          "error": "OAuth state token has already been consumed (replay attack rejected)"
-        }
-      },
-      "timestamp": "2026-11-06T13:00:52.598Z"
-    },
-    {
-      "test_id": "AC9.1",
-      "name": "Export data generation bounded strictly to verified operator tenant leads",
-      "status": "PASS",
-      "details": "Verified leads payload returned exclusively for operator tenant",
-      "evidence": {
-        "statusCode": 200
-      },
-      "timestamp": "2026-11-06T13:00:53.807Z"
-    },
-    {
-      "test_id": "AC9.2",
-      "name": "Dashboard realtime listeners implement server-mediated API fallback when RTDB rules deny direct access",
-      "status": "PASS",
-      "details": "Home fallback: true, Report fallback: true, Cookie fallback: true",
-      "evidence": {
-        "homeHasFallback": true,
-        "reportHasFallback": true,
-        "cookieHasFallback": true
-      },
-      "timestamp": "2026-11-06T13:00:53.810Z"
+      "timestamp": "2026-11-03T18:38:21.395Z"
     }
   ]
 }
