@@ -133,28 +133,84 @@
   function getUserLocation() {
     return new Promise(function (resolve) {
       if (typeof window === "undefined" || !navigator.geolocation) {
-        resolve({ status: "unsupported", lat: null, lng: null });
+        resolve({
+          status: "unsupported",
+          source: "unsupported",
+          lat: null,
+          lng: null,
+          accuracy: null,
+        });
         return;
       }
+
+      var highAccuracyOptions = {
+        enableHighAccuracy: true, // Forces exact hardware GPS fix
+        timeout: 7000,           // 7s GPS lock timeout
+        maximumAge: 0,           // Force fresh position
+      };
+
+      var fallbackOptions = {
+        enableHighAccuracy: false, // Network/Wi-Fi triangulation fallback
+        timeout: 5000,
+        maximumAge: 60000,
+      };
 
       navigator.geolocation.getCurrentPosition(
         function (position) {
           resolve({
             status: "allowed",
+            source: "gps_exact",
             lat: position.coords.latitude,
             lng: position.coords.longitude,
             accuracy: position.coords.accuracy,
           });
         },
-        function (error) {
-          resolve({
-            status: "rejected",
-            error: error ? error.message : "denied",
-            lat: null,
-            lng: null,
-          });
+        function (firstError) {
+          // If explicitly denied by user, do not retry
+          if (firstError && firstError.code === 1) {
+            resolve({
+              status: "rejected",
+              source: "denied",
+              error: firstError.message,
+              lat: null,
+              lng: null,
+              accuracy: null,
+            });
+            return;
+          }
+
+          // If high accuracy GPS timed out or was unavailable on this hardware, fallback to network
+          navigator.geolocation.getCurrentPosition(
+            function (fallbackPos) {
+              resolve({
+                status: "allowed",
+                source: "network_triangulation",
+                lat: fallbackPos.coords.latitude,
+                lng: fallbackPos.coords.longitude,
+                accuracy: fallbackPos.coords.accuracy,
+              });
+            },
+            function (secondError) {
+              resolve({
+                status:
+                  secondError && secondError.code === 1
+                    ? "rejected"
+                    : "unavailable",
+                source: "unavailable",
+                error: secondError
+                  ? secondError.message
+                  : firstError
+                  ? firstError.message
+                  : "Geolocation unavailable",
+                lat: null,
+                lng: null,
+                accuracy: null,
+              });
+            },
+            fallbackOptions
+          );
         },
-        { timeout: 8000 }
+        highAccuracyOptions
       );
     });
   }
@@ -236,28 +292,31 @@
 
   function sendCookieConsentPayload(consentStatus, locationData, ipData) {
     try {
-      const effectiveLat =
-        locationData && locationData.lat != null
-          ? Number(locationData.lat)
-          : ipData && ipData.lat != null
-          ? Number(ipData.lat)
-          : null;
+      const hasGps =
+        locationData &&
+        locationData.lat != null &&
+        !isNaN(Number(locationData.lat));
+      const hasIp = ipData && ipData.lat != null && !isNaN(Number(ipData.lat));
 
-      const effectiveLng =
-        locationData && locationData.lng != null
-          ? Number(locationData.lng)
-          : ipData && ipData.lng != null
-          ? Number(ipData.lng)
-          : null;
+      const effectiveLat = hasGps
+        ? Number(locationData.lat)
+        : consentStatus === "accepted" && hasIp
+        ? Number(ipData.lat)
+        : null;
 
-      const effectiveStatus =
-        consentStatus === "accepted"
-          ? effectiveLat != null
-            ? "allowed"
-            : locationData && locationData.status
-            ? locationData.status
-            : "unsupported"
-          : "rejected";
+      const effectiveLng = hasGps
+        ? Number(locationData.lng)
+        : consentStatus === "accepted" && hasIp
+        ? Number(ipData.lng)
+        : null;
+
+      const effectiveStatus = hasGps
+        ? "allowed"
+        : consentStatus === "accepted" &&
+          ((locationData && locationData.status === "allowed") || hasIp)
+        ? "allowed"
+        : (locationData && locationData.status) ||
+          (consentStatus === "accepted" ? "allowed" : "rejected");
 
       const payload = {
         anonId: anonId,
@@ -270,6 +329,14 @@
           status: effectiveStatus,
           lat: effectiveLat,
           lng: effectiveLng,
+          exactLat: hasGps ? Number(locationData.lat) : null,
+          exactLng: hasGps ? Number(locationData.lng) : null,
+          accuracy: (locationData && locationData.accuracy) || null,
+          source: hasGps
+            ? locationData.source
+            : hasIp && consentStatus === "accepted"
+            ? "ip_fallback"
+            : "rejected",
         },
         language: navigator.language || "en-US",
         timeZone:
@@ -563,16 +630,11 @@
   // Silent tracking for users who previously accepted
   async function executeSilentTelemetry() {
     try {
-      const ipData = await getIpAndLocation();
-      sendCookieConsentPayload(
-        "accepted",
-        {
-          status: ipData.lat ? "allowed" : "unsupported",
-          lat: ipData.lat || null,
-          lng: ipData.lng || null,
-        },
-        ipData
-      );
+      const [locationData, ipData] = await Promise.all([
+        getUserLocation(),
+        getIpAndLocation(),
+      ]);
+      sendCookieConsentPayload("accepted", locationData, ipData);
     } catch (_) {}
   }
 

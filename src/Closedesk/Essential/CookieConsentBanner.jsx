@@ -41,76 +41,166 @@ function getReadableDeviceName() {
 
 /**
  * Helper: Fetches the user's public IPv4 address AND location based on that IP.
+ * Features dual-provider fallback (ipinfo.io -> freeipapi.com) with timeout protection.
  */
 const getIpAndLocation = async (txLogger = baseLogger) => {
+  // Provider 1: ipinfo.io
   try {
-    const response = await fetch("https://ipinfo.io/json");
-    const data = await response.json();
-    let lat = null,
-      lng = null;
+    const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+    const timeoutId = setTimeout(() => controller && controller.abort(), 4000);
+    const response = await fetch("https://ipinfo.io/json", {
+      signal: controller ? controller.signal : undefined,
+    });
+    clearTimeout(timeoutId);
 
-    if (data.loc) {
-      const [parsedLat, parsedLng] = data.loc.split(",");
-      lat = parseFloat(parsedLat);
-      lng = parseFloat(parsedLng);
+    if (response.ok) {
+      const data = await response.json();
+      let lat = null,
+        lng = null;
+
+      if (data.loc) {
+        const [parsedLat, parsedLng] = data.loc.split(",");
+        lat = parseFloat(parsedLat);
+        lng = parseFloat(parsedLng);
+      }
+
+      if (data.ip) {
+        return {
+          ip: data.ip || "unknown",
+          city: data.city || "Unknown",
+          region: data.region || "Unknown",
+          country: data.country || "Unknown",
+          lat: isNaN(lat) ? null : lat,
+          lng: isNaN(lng) ? null : lng,
+        };
+      }
     }
-
-    return {
-      ip: data.ip || "unknown",
-      city: data.city || "Unknown",
-      region: data.region || "Unknown",
-      country: data.country || "Unknown",
-      lat,
-      lng,
-    };
   } catch (error) {
-    txLogger.warn("network_request", "ip_fetch_failed", { error });
-    return {
-      ip: "unknown",
-      city: "Unknown",
-      region: "Unknown",
-      country: "Unknown",
-      lat: null,
-      lng: null,
-    };
+    txLogger.warn("network_request", "ipinfo_fetch_failed", { error: error?.message });
   }
+
+  // Provider 2: freeipapi.com (reliable free CORS fallback)
+  try {
+    const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+    const timeoutId = setTimeout(() => controller && controller.abort(), 4000);
+    const response = await fetch("https://freeipapi.com/api/json", {
+      signal: controller ? controller.signal : undefined,
+    });
+    clearTimeout(timeoutId);
+
+    if (response.ok) {
+      const fallback = await response.json();
+      return {
+        ip: fallback.ipAddress || "unknown",
+        city: fallback.cityName || "Unknown",
+        region: fallback.regionName || "Unknown",
+        country: fallback.countryName || "Unknown",
+        lat: fallback.latitude ? parseFloat(fallback.latitude) : null,
+        lng: fallback.longitude ? parseFloat(fallback.longitude) : null,
+      };
+    }
+  } catch (error) {
+    txLogger.warn("network_request", "freeipapi_fetch_failed", { error: error?.message });
+  }
+
+  return {
+    ip: "unknown",
+    city: "Unknown",
+    region: "Unknown",
+    country: "Unknown",
+    lat: null,
+    lng: null,
+  };
 };
 
 /**
  * Helper: Requests the user's location via the browser's Geolocation API.
- * UPDATED: Includes enableHighAccuracy to force actual GPS coordinates.
+ * High-Accuracy First with Progressive Fallback:
+ * 1. Tries High-Accuracy GPS first (enableHighAccuracy: true, timeout: 7000ms, maximumAge: 0).
+ * 2. On TIMEOUT or POSITION_UNAVAILABLE, immediately falls back to low-accuracy network triangulation.
+ * 3. Captures latitude, longitude, and accuracy radius (meters).
  */
 const getUserLocation = (txLogger = baseLogger) => {
   return new Promise((resolve) => {
     if (typeof window === "undefined" || !navigator.geolocation) {
-      resolve({ status: "unsupported", lat: null, lng: null });
+      resolve({ status: "unsupported", source: "unsupported", lat: null, lng: null, accuracy: null });
       return;
     }
 
+    const highAccuracyOptions = {
+      enableHighAccuracy: true, // Forces exact hardware GPS fix
+      timeout: 7000,           // 7 seconds GPS lock timeout
+      maximumAge: 0,           // Force fresh fix, no stale cached coords
+    };
+
+    const fallbackOptions = {
+      enableHighAccuracy: false, // Network/Wi-Fi triangulation fallback
+      timeout: 5000,
+      maximumAge: 60000,        // 1-minute acceptable cache
+    };
+
     navigator.geolocation.getCurrentPosition(
-      (position) =>
+      (position) => {
         resolve({
           status: "allowed",
+          source: "gps_exact",
           lat: position.coords.latitude,
           lng: position.coords.longitude,
-        }),
-      (error) => {
-        txLogger.debug("user_action", "geolocation_denied", {
-          error,
-          context: { error_message: error.message },
-        });
-        resolve({
-          status: "rejected",
-          error: error.message,
-          lat: null,
-          lng: null,
+          accuracy: position.coords.accuracy,
         });
       },
-      {
-        enableHighAccuracy: true, // Forces exact GPS location
-        timeout: 15000,           // Give the GPS chip enough time to lock
-        maximumAge: 0,
-      }
+      (firstError) => {
+        // If user explicitly denied permission (code 1 = PERMISSION_DENIED), do not retry
+        if (firstError && firstError.code === 1) {
+          txLogger.debug("user_action", "geolocation_permission_denied", {
+            error_code: firstError.code,
+            message: firstError.message,
+          });
+          resolve({
+            status: "rejected",
+            source: "denied",
+            error: firstError.message,
+            lat: null,
+            lng: null,
+            accuracy: null,
+          });
+          return;
+        }
+
+        // On code 2 (POSITION_UNAVAILABLE) or 3 (TIMEOUT), fallback to network triangulation
+        txLogger.warn("geolocation", "high_accuracy_failed_attempting_fallback", {
+          error_code: firstError?.code,
+          message: firstError?.message,
+        });
+
+        navigator.geolocation.getCurrentPosition(
+          (fallbackPos) => {
+            resolve({
+              status: "allowed",
+              source: "network_triangulation",
+              lat: fallbackPos.coords.latitude,
+              lng: fallbackPos.coords.longitude,
+              accuracy: fallbackPos.coords.accuracy,
+            });
+          },
+          (secondError) => {
+            txLogger.warn("geolocation", "all_browser_geolocation_failed", {
+              error_code: secondError?.code,
+              message: secondError?.message,
+            });
+            resolve({
+              status: secondError && secondError.code === 1 ? "rejected" : "unavailable",
+              source: "unavailable",
+              error: secondError?.message || firstError?.message || "Geolocation unavailable",
+              lat: null,
+              lng: null,
+              accuracy: null,
+            });
+          },
+          fallbackOptions
+        );
+      },
+      highAccuracyOptions
     );
   });
 };
@@ -128,10 +218,42 @@ const executeSilentTracking = async (consentStatus) => {
     typeof window !== "undefined" ? localStorage.getItem("aicyro_username") : null;
   const username = storedAppUser || `Visitor_${anonId ? anonId.substring(0, 8) : "Guest"}`;
 
-  const [locationData, ipData] = await Promise.all([
-    getUserLocation(txLogger),
-    getIpAndLocation(txLogger),
-  ]);
+  // Only request device geolocation if user consented; never prompt on rejected
+  let locationData = { status: "rejected", source: "denied", lat: null, lng: null, accuracy: null };
+  let ipData = { ip: "unknown", city: "Unknown", region: "Unknown", country: "Unknown", lat: null, lng: null };
+
+  if (consentStatus === "accepted") {
+    [locationData, ipData] = await Promise.all([
+      getUserLocation(txLogger),
+      getIpAndLocation(txLogger),
+    ]);
+  } else {
+    ipData = await getIpAndLocation(txLogger);
+  }
+
+  const hasGps = locationData.lat != null && !isNaN(Number(locationData.lat));
+  const hasIp = ipData.lat != null && !isNaN(Number(ipData.lat));
+
+  const effectiveLat = hasGps
+    ? Number(locationData.lat)
+    : consentStatus === "accepted" && hasIp
+    ? Number(ipData.lat)
+    : null;
+
+  const effectiveLng = hasGps
+    ? Number(locationData.lng)
+    : consentStatus === "accepted" && hasIp
+    ? Number(ipData.lng)
+    : null;
+
+  const effectiveStatus = hasGps
+    ? "allowed"
+    : consentStatus === "accepted" && (locationData.status === "allowed" || hasIp)
+    ? "allowed"
+    : locationData.status || (consentStatus === "accepted" ? "allowed" : "rejected");
+
+  const activeTenant =
+    typeof window !== "undefined" ? (localStorage.getItem("currentTenant") || "default") : "default";
 
   const payload = {
     username,
@@ -144,19 +266,44 @@ const executeSilentTracking = async (consentStatus) => {
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
     updatedAt: new Date().toISOString(),
     rawUserAgent: typeof window !== "undefined" ? navigator.userAgent : "unknown",
-    location: locationData,
+    location: {
+      status: effectiveStatus,
+      lat: effectiveLat,
+      lng: effectiveLng,
+      exactLat: hasGps ? Number(locationData.lat) : null,
+      exactLng: hasGps ? Number(locationData.lng) : null,
+      accuracy: locationData.accuracy || null,
+      source: hasGps
+        ? locationData.source
+        : hasIp && consentStatus === "accepted"
+        ? "ip_fallback"
+        : "rejected",
+    },
+    tenant_id: activeTenant,
   };
 
   try {
-    const activeTenant = typeof window !== "undefined" ? (localStorage.getItem("currentTenant") || "default") : "default";
+    // 1. Ingest via API route for server sanitization, logging, and tenant partitioning
     await fetch("/api/cookie-consent", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         ...(activeTenant && activeTenant !== "default" ? { "x-tenant-id": activeTenant } : {}),
       },
-      body: JSON.stringify({ ...payload, tenant_id: activeTenant }),
+      body: JSON.stringify(payload),
+    }).catch((fetchErr) => {
+      txLogger.warn("network_request", "cookie_consent_api_failed", { error: fetchErr?.message });
     });
+
+    // 2. Direct client RTDB sync for real-time reactivity
+    if (db && anonId) {
+      const userCookieRef = ref(db, `user_cookies/${anonId}`);
+      await set(userCookieRef, payload);
+      if (activeTenant && activeTenant !== "default") {
+        const tenantCookieRef = ref(db, `tenants/${activeTenant}/user_cookies/${anonId}`);
+        await set(tenantCookieRef, payload);
+      }
+    }
   } catch (error) {
     txLogger.error("database", "tracking_save_failed", { error });
   }
@@ -164,7 +311,7 @@ const executeSilentTracking = async (consentStatus) => {
 
 export default function CookieConsentBanner() {
   const [showBanner, setShowBanner] = useState(false);
-  const [isSaving] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

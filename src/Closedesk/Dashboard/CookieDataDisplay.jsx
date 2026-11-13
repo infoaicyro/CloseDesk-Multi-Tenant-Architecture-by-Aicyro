@@ -129,7 +129,12 @@ export default function CookieDataDisplay() {
   }
 
   const mappedCookies = displayCookies.filter(
-    (c) => c.location?.status === "allowed" && c.location?.lat && c.location?.lng,
+    (c) =>
+      c.location?.status === "allowed" &&
+      c.location?.lat != null &&
+      c.location?.lng != null &&
+      !isNaN(Number(c.location.lat)) &&
+      !isNaN(Number(c.location.lng)),
   );
 
   const showToast = (message, type = "info") => {
@@ -343,14 +348,17 @@ export default function CookieDataDisplay() {
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
                     {selectedPinCookie.ipAddress || "Unknown IP"}
                   </span>
-                  {selectedPinCookie.location?.lat && (
+                  {selectedPinCookie.location?.lat != null && (
                     <a
                       href={`https://www.google.com/maps/search/?api=1&query=${selectedPinCookie.location.lat},${selectedPinCookie.location.lng}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-xs font-semibold text-[var(--primary)] hover:underline flex items-center gap-1 mt-0.5"
                     >
-                      <span>📍 GPS: {Number(selectedPinCookie.location.lat).toFixed(4)}, {Number(selectedPinCookie.location.lng).toFixed(4)}</span>
+                      <span>
+                        📍 {selectedPinCookie.location?.source === "gps_exact" || selectedPinCookie.location?.exactLat != null ? "GPS (Exact)" : "Location"}:{" "}
+                        {Number(selectedPinCookie.location.lat).toFixed(4)}, {Number(selectedPinCookie.location.lng).toFixed(4)}
+                      </span>
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
                     </a>
                   )}
