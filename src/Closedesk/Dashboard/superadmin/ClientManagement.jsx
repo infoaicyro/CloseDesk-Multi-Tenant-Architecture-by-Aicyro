@@ -210,21 +210,22 @@ export default function ClientManagement() {
   };
 
   const handlePinChange = (e) => {
-    const val = e.target.value.replace(/\D/g, "").slice(0, 4);
+    const val = e.target.value.replace(/\D/g, "").slice(0, 6);
     setPinInput(val);
-    if (val.length === 4) {
+    if (val.length === 4 || val.length === 6) {
       verifyPin(val);
     }
   };
 
   const handlePinSubmit = (e) => {
     e.preventDefault();
-    if (pinInput.length === 4) {
+    if (pinInput.length >= 4) {
       verifyPin(pinInput);
     }
   };
 
   const executeSecuredAction = (action) => {
+    if (!action) return;
     switch (action.type) {
       case "REVEAL_PASSWORD":
         setRevealedPasswords((prev) => {
@@ -239,6 +240,11 @@ export default function ClientManagement() {
       case "EDIT_PROFILE":
         setIsEditingProfile(true);
         setEditedProfileData({ ...viewingProfile.profile });
+        break;
+      case "CREATE_CLIENT":
+        if (action.payload) {
+          performCreateClient(action.payload);
+        }
         break;
       default:
         break;
@@ -534,6 +540,21 @@ export default function ClientManagement() {
         },
       };
 
+      const clientDataBundle = {
+        cleanTenantId,
+        tenantPayload,
+        businessName,
+        email,
+        phone,
+        website,
+        industry,
+        timezone,
+        adminUsername,
+        adminPassword,
+        originHost,
+        nowIso,
+      };
+
       // Write tenant record securely via server API (CD02)
       const token = localStorage.getItem("cd_session_token");
       const createRes = await fetch("/api/superadmin/tenants", {
@@ -552,61 +573,124 @@ export default function ClientManagement() {
 
       if (!createRes.ok) {
         const err = await createRes.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to create tenant");
+        if (createRes.status === 403 && (err.stepUpRequired || (typeof err.error === "string" && err.error.includes("Secondary factor")))) {
+          // Trigger PIN verification modal
+          requestPinAuth({
+            type: "CREATE_CLIENT",
+            payload: clientDataBundle,
+          });
+          return;
+        }
+        setAddClientError(err.error || "Failed to create tenant");
+        return;
       }
 
-      // Record SOC2-style Audit Trail
-      recordAuditTrail(pulseLogger, "client_created", {
-        who: localStorage.getItem("currentSuperAdmin") || "superadmin",
-        target: `tenants/${cleanTenantId}`,
-        tenant_id: cleanTenantId,
-        industry_pack: industryPack,
-        status: "success",
-      });
-
-      // Update client state locally
-      const createdClientObj = {
-        id: cleanTenantId,
-        profile: {
-          businessName: businessName.trim(),
-          email: email.trim(),
-          phone: phone.trim(),
-          website: website.trim(),
-          industry: industry,
-          timezone: timezone,
-          updated_at: nowIso,
-        },
-        users: [
-          {
-            name: adminUsername.trim(),
-            password: adminPassword.trim(),
-            role: "admin",
-          },
-        ],
-        config: tenantPayload.config,
-        isMultiTenant: true,
-      };
-
-      setClients((prev) => [...prev, createdClientObj]);
-
-      // Open Success & Embed Snippet Modal
-      setCreatedClientModal({
-        tenantId: cleanTenantId,
-        businessName: businessName.trim(),
-        adminUsername: adminUsername.trim(),
-        adminPassword: adminPassword.trim(),
-        embedSnippet: `<script src="${originHost}/widget.js" data-tenant="${cleanTenantId}" defer></script>`,
-      });
-
-      // Reset Form
-      setNewClientData(INITIAL_NEW_CLIENT);
-      setIsAddingClient(false);
+      finalizeClientCreation(clientDataBundle);
     } catch (error) {
       console.error("Failed to create client:", error);
-      setAddClientError("Failed to save new client to Firebase database. Check network or console.");
+      setAddClientError(error.message || "Failed to save new client to Firebase database.");
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const performCreateClient = async (clientDataBundle) => {
+    setActionLoading(true);
+    setAddClientError("");
+    try {
+      const { cleanTenantId, tenantPayload } = clientDataBundle;
+      const token = localStorage.getItem("cd_session_token");
+      const createRes = await fetch("/api/superadmin/tenants", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-requested-with": "XMLHttpRequest",
+          ...(token ? { "x-cd-session": token } : {}),
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          tenantId: cleanTenantId,
+          tenantPayload,
+        }),
+      });
+
+      if (!createRes.ok) {
+        const err = await createRes.json().catch(() => ({}));
+        setAddClientError(err.error || "Failed to create tenant after PIN verification.");
+        return;
+      }
+
+      finalizeClientCreation(clientDataBundle);
+    } catch (error) {
+      console.error("Failed to create client after step-up:", error);
+      setAddClientError(error.message || "Failed to save new client to Firebase database.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const finalizeClientCreation = (clientDataBundle) => {
+    const {
+      cleanTenantId,
+      tenantPayload,
+      businessName,
+      email,
+      phone,
+      website,
+      industry,
+      timezone,
+      adminUsername,
+      adminPassword,
+      originHost,
+      nowIso,
+    } = clientDataBundle;
+
+    // Record SOC2-style Audit Trail
+    recordAuditTrail(pulseLogger, "client_created", {
+      who: localStorage.getItem("currentSuperAdmin") || "superadmin",
+      target: `tenants/${cleanTenantId}`,
+      tenant_id: cleanTenantId,
+      industry_pack: tenantPayload.config?.industry_pack,
+      status: "success",
+    });
+
+    // Update client state locally
+    const createdClientObj = {
+      id: cleanTenantId,
+      profile: {
+        businessName: businessName.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        website: website.trim(),
+        industry: industry,
+        timezone: timezone,
+        updated_at: nowIso,
+      },
+      users: [
+        {
+          name: adminUsername.trim(),
+          password: adminPassword.trim(),
+          role: "admin",
+        },
+      ],
+      config: tenantPayload.config,
+      isMultiTenant: true,
+    };
+
+    setClients((prev) => [...prev, createdClientObj]);
+
+    // Open Success & Embed Snippet Modal
+    setCreatedClientModal({
+      tenantId: cleanTenantId,
+      businessName: businessName.trim(),
+      adminUsername: adminUsername.trim(),
+      adminPassword: adminPassword.trim(),
+      embedSnippet: `<script src="${originHost}/widget.js" data-tenant="${cleanTenantId}" defer></script>`,
+    });
+
+    // Reset Form
+    setNewClientData(INITIAL_NEW_CLIENT);
+    setIsAddingClient(false);
   };
 
   const closeProfileModal = () => {
@@ -1552,7 +1636,7 @@ export default function ClientManagement() {
                 <input
                   type="password"
                   autoFocus
-                  maxLength={4}
+                  maxLength={6}
                   value={pinInput}
                   onChange={handlePinChange}
                   placeholder="••••"
