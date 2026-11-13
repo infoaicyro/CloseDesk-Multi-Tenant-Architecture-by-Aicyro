@@ -28,35 +28,27 @@ export default async function handler(req, res) {
 
   // 2. Reject absent or missing state parameter
   if (!state) {
-    const errorMsg = "OAuth state parameter missing. CSRF protection check failed.";
-    if (req.headers?.accept?.includes("text/html")) {
-      return res.status(403).send(
-        buildPostMessageHtml({
-          status: "error",
-          provider: "google",
-          error: errorMsg,
-          allowedOrigin,
-        })
-      );
-    }
-    return res.status(403).json({ status: "error", provider: "google", error: errorMsg });
+    return res.status(400).send(
+      buildPostMessageHtml({
+        status: "error",
+        provider: "google",
+        error: "OAuth state parameter missing. CSRF protection check failed.",
+        allowedOrigin,
+      })
+    );
   }
 
   // 3. Cryptographically verify state token, tenant binding, and replay defense
   const stateCheck = verifyAndConsumeOAuthState(state, "google");
   if (!stateCheck.valid) {
-    const errorMsg = stateCheck.error || "Invalid or expired OAuth state parameter (replay defense triggered).";
-    if (req.headers?.accept?.includes("text/html")) {
-      return res.status(403).send(
-        buildPostMessageHtml({
-          status: "error",
-          provider: "google",
-          error: errorMsg,
-          allowedOrigin,
-        })
-      );
-    }
-    return res.status(403).json({ status: "error", provider: "google", error: errorMsg });
+    return res.status(403).send(
+      buildPostMessageHtml({
+        status: "error",
+        provider: "google",
+        error: stateCheck.error || "Invalid or expired OAuth state parameter.",
+        allowedOrigin,
+      })
+    );
   }
 
   const { sub: operator, tenantId, nonce, cv: codeVerifier, redirectUri } = stateCheck.payload;
