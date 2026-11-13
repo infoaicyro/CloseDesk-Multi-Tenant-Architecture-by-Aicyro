@@ -97,24 +97,68 @@ async function handler(req, res, apiLogger) {
             .split(",")[0]
             .trim();
 
-    // Parse numeric coordinates safely for Google Maps markers
-    const numLat =
-      location && location.lat != null && !isNaN(Number(location.lat))
-        ? Number(location.lat)
-        : ipLocation && ipLocation.lat != null && !isNaN(Number(ipLocation.lat))
+    // Parse numeric coordinates safely for Google Maps markers and exact GPS auditing
+    const ipLat =
+      ipLocation && ipLocation.lat != null && !isNaN(Number(ipLocation.lat))
         ? Number(ipLocation.lat)
         : null;
-
-    const numLng =
-      location && location.lng != null && !isNaN(Number(location.lng))
-        ? Number(location.lng)
-        : ipLocation && ipLocation.lng != null && !isNaN(Number(ipLocation.lng))
+    const ipLng =
+      ipLocation && ipLocation.lng != null && !isNaN(Number(ipLocation.lng))
         ? Number(ipLocation.lng)
         : null;
 
+    const exactLat =
+      location && location.exactLat != null && !isNaN(Number(location.exactLat))
+        ? Number(location.exactLat)
+        : location && location.source === "gps_exact" && location.lat != null && !isNaN(Number(location.lat))
+        ? Number(location.lat)
+        : null;
+
+    const exactLng =
+      location && location.exactLng != null && !isNaN(Number(location.exactLng))
+        ? Number(location.exactLng)
+        : location && location.source === "gps_exact" && location.lng != null && !isNaN(Number(location.lng))
+        ? Number(location.lng)
+        : null;
+
+    // Effective display coordinates (exact GPS if available, else IP fallback when accepted)
+    const displayLat =
+      exactLat != null
+        ? exactLat
+        : location && location.lat != null && !isNaN(Number(location.lat))
+        ? Number(location.lat)
+        : consentStatus === "accepted" && ipLat != null
+        ? ipLat
+        : null;
+
+    const displayLng =
+      exactLng != null
+        ? exactLng
+        : location && location.lng != null && !isNaN(Number(location.lng))
+        ? Number(location.lng)
+        : consentStatus === "accepted" && ipLng != null
+        ? ipLng
+        : null;
+
     const locationStatus =
-      (location && location.status) ||
-      (consentStatus === "accepted" && numLat != null ? "allowed" : "rejected");
+      exactLat != null
+        ? "allowed"
+        : location && location.status === "allowed"
+        ? "allowed"
+        : consentStatus === "accepted" && displayLat != null
+        ? "allowed"
+        : location && location.status
+        ? location.status
+        : "rejected";
+
+    const locationSource =
+      exactLat != null
+        ? (location && location.source) || "gps_exact"
+        : location && location.source
+        ? location.source
+        : displayLat != null && displayLat === ipLat
+        ? "ip_fallback"
+        : "unknown";
 
     const payload = sanitizeForFirebase({
       id: String(anonId),
@@ -128,13 +172,20 @@ async function handler(req, res, apiLogger) {
         city: (ipLocation && ipLocation.city) || "Unknown",
         region: (ipLocation && ipLocation.region) || "Unknown",
         country: (ipLocation && ipLocation.country) || "Unknown",
-        lat: numLat,
-        lng: numLng,
+        lat: ipLat,
+        lng: ipLng,
       },
       location: {
         status: locationStatus,
-        lat: numLat,
-        lng: numLng,
+        lat: displayLat,
+        lng: displayLng,
+        exactLat: exactLat,
+        exactLng: exactLng,
+        accuracy:
+          location && location.accuracy != null && !isNaN(Number(location.accuracy))
+            ? Number(location.accuracy)
+            : null,
+        source: locationSource,
       },
       language: language || "en-US",
       timeZone: timeZone || "UTC",

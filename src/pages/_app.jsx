@@ -5,6 +5,7 @@ import "@/styles/globals.css";
 import RootLayout from "./layout";
 import ThemeProvider from "../Closedesk/ThemeProvider";
 import GlobalActivityTracker from "../Closedesk/GlobalActivityTracker";
+import CookieConsentBanner from "../Closedesk/Essential/CookieConsentBanner";
 import { trackVisit } from "../lib/activityTracker";
 
 // Import tracing utility
@@ -57,6 +58,7 @@ export default function App({ Component, pageProps }) {
     <ThemeProvider>
       <RootLayout>
         {!isInternalRoute && <GlobalActivityTracker />}
+        {!isInternalRoute && <CookieConsentBanner />}
         <Component {...pageProps} />
       </RootLayout>
     </ThemeProvider>

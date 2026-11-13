@@ -160,12 +160,24 @@ const CustomGoogleMarker = memo(({ cookie, isJustNow, isActive, onMarkerClick })
         {/* Selected Marker Detail Card */}
         {isActive && (
           <div className="absolute bottom-[36px] flex flex-col items-center pointer-events-none bg-white text-gray-900 px-3.5 py-2 rounded-xl shadow-2xl border border-gray-200 min-w-max animate-in fade-in zoom-in-95 duration-200 z-50">
-            <span className="text-xs font-bold text-gray-900 tracking-wide leading-tight">{cookie.username}</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-bold text-gray-900 tracking-wide leading-tight">{cookie.username}</span>
+              {cookie.location?.source === "gps_exact" || cookie.location?.exactLat != null ? (
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-bold uppercase tracking-wider">
+                  GPS Exact
+                </span>
+              ) : (
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-medium uppercase tracking-wider">
+                  IP / Network
+                </span>
+              )}
+            </div>
             <span className="text-[11px] font-semibold text-[var(--primary)] leading-tight mt-1">
               {placeName || `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`}
             </span>
             <span className="text-[9px] text-gray-500 font-mono mt-0.5">
               ({lat.toFixed(4)}, {lng.toFixed(4)})
+              {cookie.location?.accuracy ? ` • ±${Math.round(cookie.location.accuracy)}m` : ""}
             </span>
             <div className="w-2.5 h-2.5 bg-white border-r border-b border-gray-200 rotate-45 absolute -bottom-1.5 left-1/2 -translate-x-1/2"></div>
           </div>

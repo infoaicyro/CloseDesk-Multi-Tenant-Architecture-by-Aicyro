@@ -77,6 +77,8 @@ const LocationRenderer = ({ location }) => {
   if (location?.status === "unsupported") return <span>Unsupported</span>;
   if (location?.status !== "allowed" || isNaN(lat) || isNaN(lng)) return <span>Not Captured</span>;
 
+  const isExactGps = location?.source === "gps_exact" || location?.exactLat != null;
+
   return (
     <a
       href={`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`}
@@ -84,11 +86,16 @@ const LocationRenderer = ({ location }) => {
       rel="noopener noreferrer"
       onClick={(e) => e.stopPropagation()}
       className="text-[var(--primary)] hover:underline flex items-center gap-1.5 transition-all truncate w-full"
-      title={placeName ? `${placeName} (${lat.toFixed(4)}, ${lng.toFixed(4)})` : `${lat.toFixed(4)}, ${lng.toFixed(4)}`}
+      title={placeName ? `${placeName} (${lat.toFixed(4)}, ${lng.toFixed(4)})${isExactGps ? " [GPS Exact]" : ""}` : `${lat.toFixed(4)}, ${lng.toFixed(4)}`}
     >
-      <span className="truncate">
-        {placeName ? <span className="font-medium mr-1">{placeName}</span> : ""}
-        <span className="text-[10px] opacity-75">({lat.toFixed(4)}, {lng.toFixed(4)})</span>
+      <span className="truncate flex items-center gap-1">
+        {isExactGps && (
+          <span className="shrink-0 text-[9px] px-1 py-0.2 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20">
+            GPS
+          </span>
+        )}
+        {placeName ? <span className="font-medium mr-1 truncate">{placeName}</span> : ""}
+        <span className="text-[10px] opacity-75 shrink-0">({lat.toFixed(4)}, {lng.toFixed(4)})</span>
       </span>
       <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
