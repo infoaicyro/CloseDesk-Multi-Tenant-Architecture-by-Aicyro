@@ -65,6 +65,14 @@ test-results/
 # Temporary / Generated Documents
 *.docx
 .docs/
+*.pdf
+
+# Project Management, Jira & External Documentation
+jira/
+**/jira/
+*jira*
+Drive docs/
+**/Drive docs/**
 
 # Caches & Build Artifacts
 .eslintcache
