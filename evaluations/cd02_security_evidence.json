@@ -1,0 +1,245 @@
+{
+  "ticket": "CD02",
+  "title": "Privileged Access and Sessions",
+  "timestamp": "2026-11-03T18:38:40.106Z",
+  "gitCommit": "6da8781737a63a74a3e81db44d473de3022be583",
+  "gitBranch": "feat/cd05-public-endpoint-controls-budgets",
+  "nodeVersion": "v26.8.2",
+  "results": [
+    {
+      "criterionId": "AC1.1",
+      "description": "GET /api/superadmin/tenants without session returns 401 Unauthorized",
+      "status": "PASS",
+      "details": {
+        "statusCode": 401,
+        "body": {
+          "error": "Authentication required. Active session missing or expired."
+        }
+      }
+    },
+    {
+      "criterionId": "AC1.2",
+      "description": "GET /api/superadmin/settings without session returns 401 Unauthorized",
+      "status": "PASS",
+      "details": {
+        "statusCode": 401,
+        "body": {
+          "error": "Authentication required. Active session missing or expired."
+        }
+      }
+    },
+    {
+      "criterionId": "AC2.1",
+      "description": "Expired token request is rejected with 401 Unauthorized",
+      "status": "PASS",
+      "details": {
+        "statusCode": 401,
+        "body": {
+          "error": "Authentication required. Active session missing or expired."
+        }
+      }
+    },
+    {
+      "criterionId": "AC2.2",
+      "description": "Session revoked via revokeUserSessions is rejected with 401 Unauthorized",
+      "status": "PASS",
+      "details": {
+        "statusCode": 401,
+        "body": {
+          "error": "Authentication required. Active session missing or expired."
+        }
+      }
+    },
+    {
+      "criterionId": "AC3.1",
+      "description": "Tenant Operator cannot access /api/superadmin/tenants (403 Forbidden)",
+      "status": "PASS",
+      "details": {
+        "statusCode": 403,
+        "body": {
+          "error": "Access denied. Insufficient role permissions."
+        }
+      }
+    },
+    {
+      "criterionId": "AC3.2",
+      "description": "Tenant Operator cannot access /api/superadmin/settings (403 Forbidden)",
+      "status": "PASS",
+      "details": {
+        "statusCode": 403,
+        "body": {
+          "error": "Access denied. Insufficient role permissions."
+        }
+      }
+    },
+    {
+      "criterionId": "AC4.1",
+      "description": "Password-only Super Admin (stepUpVerified: false) blocked from platform mutations (403)",
+      "status": "PASS",
+      "details": {
+        "statusCode": 403,
+        "body": {
+          "error": "Secondary factor step-up verification required before accessing this endpoint.",
+          "stepUpRequired": true
+        }
+      }
+    },
+    {
+      "criterionId": "AC4.2",
+      "description": "Secondary-factor verified Super Admin (stepUpVerified: true) allowed access (200 OK)",
+      "status": "PASS",
+      "details": {
+        "statusCode": 200,
+        "body": {
+          "success": true,
+          "tenants": {},
+          "note": "Database offline fallback"
+        }
+      }
+    },
+    {
+      "criterionId": "AC5.1",
+      "description": "hashPassword generates format 'scrypt:<salt>:<hash>' with 16-byte random salt",
+      "status": "PASS",
+      "details": {
+        "format": "scrypt:d0cb9deb9b1c667b97e257f...",
+        "saltLength": 32,
+        "hashLength": 128
+      }
+    },
+    {
+      "criterionId": "AC5.2",
+      "description": "verifyPassword matches correct password and rejects incorrect password in timing-safe manner",
+      "status": "PASS",
+      "details": {
+        "matchSuccess": {
+          "match": true,
+          "needsUpgrade": false
+        },
+        "matchFailure": {
+          "match": false,
+          "needsUpgrade": false
+        }
+      }
+    },
+    {
+      "criterionId": "AC5.3",
+      "description": "Legacy plaintext password verification detects match and flags needsUpgrade: true",
+      "status": "PASS",
+      "details": {
+        "match": true,
+        "needsUpgrade": true
+      }
+    },
+    {
+      "criterionId": "AC5.4",
+      "description": "timingSafeStringEqual validates identity and prevents length leak timing attacks",
+      "status": "PASS",
+      "details": {
+        "tsEqual1": true,
+        "tsEqual2": false,
+        "tsEqual3": false
+      }
+    },
+    {
+      "criterionId": "AC6.1",
+      "description": "serializeSessionCookie enforces HttpOnly, SameSite=Strict, Path=/, and Secure flags",
+      "status": "PASS",
+      "details": {
+        "cookieHeader": "cd_session=eyJhbGciOiJIUzI1NiIsInR5cCI6I..."
+      }
+    },
+    {
+      "criterionId": "AC6.2",
+      "description": "clearSessionCookie terminates cookie with Max-Age=0 and epoch expiration",
+      "status": "PASS",
+      "details": {
+        "clearedCookie": "cd_session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT"
+      }
+    },
+    {
+      "criterionId": "AC6.3",
+      "description": "validateCsrf rejects cross-origin state-changing POST without custom header",
+      "status": "PASS",
+      "details": {
+        "valid": false,
+        "error": "Cross-site request origin disallowed"
+      }
+    },
+    {
+      "criterionId": "AC6.4",
+      "description": "validateCsrf accepts request containing custom header (anti-forgery defense)",
+      "status": "PASS",
+      "details": {
+        "valid": true
+      }
+    },
+    {
+      "criterionId": "AC7.1",
+      "description": "5th failed attempt triggers sliding window lockout (allowed: false, retryAfter > 0)",
+      "status": "PASS",
+      "details": {
+        "allowed": false,
+        "count": 5,
+        "locked": true,
+        "retryAfter": 900
+      }
+    },
+    {
+      "criterionId": "AC7.2",
+      "description": "Rate limit state persists across simulated serverless cold starts (client remains locked)",
+      "status": "PASS",
+      "details": {
+        "allowed": false,
+        "remainingAttempts": 0,
+        "retryAfter": 900
+      }
+    },
+    {
+      "criterionId": "AC7.3",
+      "description": "resetRateLimit releases lockout upon successful authentication",
+      "status": "PASS",
+      "details": {
+        "allowed": true,
+        "remainingAttempts": 5,
+        "retryAfter": 0
+      }
+    },
+    {
+      "criterionId": "AC8.1",
+      "description": "generateTotp / verifyTotp generates and validates 6-digit RFC 6238 code",
+      "status": "PASS",
+      "details": {
+        "code": "507013",
+        "secretLength": 32
+      }
+    },
+    {
+      "criterionId": "AC8.2",
+      "description": "verifyTotp allows ±1 window timestep drift and rejects expired out-of-window codes",
+      "status": "PASS",
+      "details": {
+        "pastVerified": true,
+        "futureVerified": true,
+        "expiredRejected": false
+      }
+    },
+    {
+      "criterionId": "AC8.3",
+      "description": "Emergency recovery code verification matches case/hyphen-insensitively against hashed store",
+      "status": "PASS",
+      "details": {
+        "matchIdx": 0,
+        "noMatchIdx": -1
+      }
+    },
+    {
+      "criterionId": "AC8.4",
+      "description": "Audit verifies zero misleading '2FA' or 'MFA' labels applied to static PINs in codebase",
+      "status": "PASS",
+      "details": {
+        "violations": []
+      }
+    }
+  ]
+}

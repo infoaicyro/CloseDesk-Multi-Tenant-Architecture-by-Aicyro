@@ -1,0 +1,15 @@
+name: Daily Log Retention Cleanup
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # Runs at 00:00 UTC every day
+  workflow_dispatch: # Adds a button in GitHub so you can trigger it manually to test!
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Netlify Cron API
+        run: |
+          curl -X POST "https://aicyro.pro/api/cron/retention-cleanup" \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"

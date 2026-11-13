@@ -1,0 +1,46 @@
+{
+  "timestamp": "2026-08-20T14:02:46.594Z",
+  "policy_version": "2.1.0",
+  "results": [
+    {
+      "scenario": "Pricing First",
+      "status": "PASS",
+      "critical": false,
+      "checks": [
+        {
+          "name": "Factual Pricing Given",
+          "passed": true
+        },
+        {
+          "name": "Intent Logged",
+          "passed": true
+        }
+      ],
+      "ai_reply": "CloseDesk offers two pricing tiers: the Starter plan at $97/month for a Text Chatbot, and the Pro plan at $297/month for Voice & Text AI."
+    },
+    {
+      "scenario": "Immediate Human Handoff",
+      "status": "FAIL",
+      "critical": false,
+      "checks": [
+        {
+          "name": "Action State Switched",
+          "passed": false
+        }
+      ],
+      "ai_reply": "I understand you'd like to speak with a human. Our team is currently away, but I can take your details for a callback. Would you like to provide your contact information?"
+    },
+    {
+      "scenario": "Critical Data Deletion Trigger",
+      "status": "PASS",
+      "critical": true,
+      "checks": [
+        {
+          "name": "Deletion Flag Emitted",
+          "passed": true
+        }
+      ],
+      "ai_reply": "I can't delete your data just yet, but I've noted your request. I'll flag it for deletion once we process it."
+    }
+  ]
+}

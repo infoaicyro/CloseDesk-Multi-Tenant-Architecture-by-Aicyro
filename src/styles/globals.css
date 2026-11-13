@@ -1,0 +1,502 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* ==============================================================
+     DEFAULT THEMES (Kept exactly the same as requested)
+  ============================================================== */
+
+  /* Default Light Mode */
+  :root {
+    --background: #f4f4f5;
+    --foreground: #0b0219;
+    --foreground-muted: #4a4a6a;
+    --primary: #8a2be2;
+    --secondary: #7b71db;
+    --accent-blue: #5b6ec2;
+    --border-color: rgba(11, 2, 25, 0.15);
+    --card-bg: #ffffff;
+    --grid-line: rgba(11, 2, 25, 0.05);
+    --spotlight-opacity: 0.15;
+    --footer-bg: #eaebf0;
+    --sidebar-bg: #ffffff;
+    --sidebar-border: rgba(11, 2, 25, 0.2);
+    --logo-base: #1e292c;
+    --logo-mongo-green: #2ed06e;
+    --logo-upwork-green: #25841f;
+    --logo-politico-red: #d71920;
+    --card-gradient-start: #ffffff;
+    --card-gradient-end: #f4f4f5;
+    --hero-from: #e0e7ff;
+    --hero-via: #f4f4f5;
+    --hero-to: #ffffff;
+    --lead-from: #e0e7ff;
+    --lead-via: #f4f4f5;
+    --lead-to: #ffffff;
+    --lead-glow: rgba(138, 43, 226, 0.05);
+    --overlay-gradient-start: rgba(244, 244, 245, 0.8);
+    --overlay-gradient-end: rgba(244, 244, 245, 0.8);
+    --image-overlay: rgba(123, 113, 219, 0.9);
+  }
+
+  /* Default Dark Mode */
+  [data-theme="dark"] {
+    --background: #0a0118;
+    --foreground: #ffffff;
+    --foreground-muted: #9ca3af;
+    --primary: #8a2be2;
+    --secondary: #7b71db;
+    --accent-blue: #5b86d3;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --card-bg: #120b18;
+    --grid-line: #4a4a6a;
+    --spotlight-opacity: 0.08;
+    --footer-bg: #060010;
+    --sidebar-bg: #120b18;
+    --sidebar-border: rgba(255, 255, 255, 0.1);
+    --logo-base: #ffffff;
+    --logo-mongo-green: #ffffff;
+    --logo-upwork-green: #ffffff;
+    --logo-politico-red: #ffffff;
+    --card-gradient-start: #1f1629;
+    --card-gradient-end: #120b18;
+    --hero-from: #1e1b4b;
+    --hero-via: #0a0118;
+    --hero-to: #0b0219;
+    --lead-from: #2e1065;
+    --lead-via: #0a0118;
+    --lead-to: #0b0219;
+    --lead-glow: rgba(138, 43, 226, 0.15);
+    --overlay-gradient-start: rgba(15, 5, 41, 0.8);
+    --overlay-gradient-end: rgba(5, 11, 41, 0.8);
+    --image-overlay: rgba(93, 132, 211, 0.9);
+  }
+
+  /* ==============================================================
+     1. RED THEMES
+  ============================================================== */
+  [data-theme="red-light"] {
+    --background: #fef2f2;
+    --foreground: #450a0a;
+    --foreground-muted: #991b1b;
+    --primary: #ef4444;
+    --secondary: #dc2626;
+    --accent-blue: #f87171;
+    --border-color: rgba(220, 38, 38, 0.15);
+    --card-bg: #ffffff;
+    --grid-line: rgba(220, 38, 38, 0.05);
+    --spotlight-opacity: 0.1;
+    --footer-bg: #fee2e2;
+    --sidebar-bg: #ffffff;
+    --sidebar-border: rgba(220, 38, 38, 0.2);
+    --logo-base: #450a0a;
+    --card-gradient-start: #ffffff;
+    --card-gradient-end: #fef2f2;
+    --hero-from: #fecaca;
+    --hero-via: #fef2f2;
+    --hero-to: #ffffff;
+    --lead-from: #fecaca;
+    --lead-via: #fef2f2;
+    --lead-to: #ffffff;
+    --lead-glow: rgba(239, 68, 68, 0.1);
+  }
+
+  [data-theme="red-dark"] {
+    --background: #0f0505;
+    --foreground: #fef2f2;
+    --foreground-muted: #fca5a5;
+    --primary: #ef4444;
+    --secondary: #dc2626;
+    --accent-blue: #f87171;
+    --border-color: rgba(239, 68, 68, 0.2);
+    --card-bg: #170a0a;
+    --grid-line: #2a1111;
+    --spotlight-opacity: 0.08;
+    --footer-bg: #080303;
+    --sidebar-bg: #170a0a;
+    --sidebar-border: rgba(239, 68, 68, 0.2);
+    --logo-base: #ffffff;
+    --card-gradient-start: #2a1111;
+    --card-gradient-end: #170a0a;
+    --hero-from: #450a0a;
+    --hero-via: #0f0505;
+    --hero-to: #080303;
+    --lead-from: #450a0a;
+    --lead-via: #0f0505;
+    --lead-to: #080303;
+    --lead-glow: rgba(239, 68, 68, 0.15);
+  }
+
+  /* ==============================================================
+     2. ORANGE THEMES
+  ============================================================== */
+  [data-theme="orange-light"] {
+    --background: #fff7ed;
+    --foreground: #431407;
+    --foreground-muted: #9a3412;
+    --primary: #f97316;
+    --secondary: #ea580c;
+    --accent-blue: #fb923c;
+    --border-color: rgba(234, 88, 12, 0.15);
+    --card-bg: #ffffff;
+    --grid-line: rgba(234, 88, 12, 0.05);
+    --spotlight-opacity: 0.1;
+    --footer-bg: #ffedd5;
+    --sidebar-bg: #ffffff;
+    --sidebar-border: rgba(234, 88, 12, 0.2);
+    --logo-base: #431407;
+    --card-gradient-start: #ffffff;
+    --card-gradient-end: #fff7ed;
+    --hero-from: #fed7aa;
+    --hero-via: #fff7ed;
+    --hero-to: #ffffff;
+    --lead-from: #fed7aa;
+    --lead-via: #fff7ed;
+    --lead-to: #ffffff;
+    --lead-glow: rgba(249, 115, 22, 0.1);
+  }
+
+  [data-theme="orange-dark"] {
+    --background: #0f0804;
+    --foreground: #fff7ed;
+    --foreground-muted: #fdba74;
+    --primary: #f97316;
+    --secondary: #ea580c;
+    --accent-blue: #fb923c;
+    --border-color: rgba(249, 115, 22, 0.2);
+    --card-bg: #1a0e07;
+    --grid-line: #2e160a;
+    --spotlight-opacity: 0.08;
+    --footer-bg: #0a0502;
+    --sidebar-bg: #1a0e07;
+    --sidebar-border: rgba(249, 115, 22, 0.2);
+    --logo-base: #ffffff;
+    --card-gradient-start: #2e160a;
+    --card-gradient-end: #1a0e07;
+    --hero-from: #431407;
+    --hero-via: #0f0804;
+    --hero-to: #0a0502;
+    --lead-from: #431407;
+    --lead-via: #0f0804;
+    --lead-to: #0a0502;
+    --lead-glow: rgba(249, 115, 22, 0.15);
+  }
+
+  /* ==============================================================
+     3. YELLOW (AMBER) THEMES
+  ============================================================== */
+  [data-theme="yellow-light"] {
+    --background: #fffbeb;
+    --foreground: #422006;
+    --foreground-muted: #b45309;
+    --primary: #f59e0b;
+    --secondary: #d97706;
+    --accent-blue: #fbbf24;
+    --border-color: rgba(217, 119, 6, 0.15);
+    --card-bg: #ffffff;
+    --grid-line: rgba(217, 119, 6, 0.05);
+    --spotlight-opacity: 0.1;
+    --footer-bg: #fef3c7;
+    --sidebar-bg: #ffffff;
+    --sidebar-border: rgba(217, 119, 6, 0.2);
+    --logo-base: #422006;
+    --card-gradient-start: #ffffff;
+    --card-gradient-end: #fffbeb;
+    --hero-from: #fde68a;
+    --hero-via: #fffbeb;
+    --hero-to: #ffffff;
+    --lead-from: #fde68a;
+    --lead-via: #fffbeb;
+    --lead-to: #ffffff;
+    --lead-glow: rgba(245, 158, 11, 0.1);
+  }
+
+  [data-theme="yellow-dark"] {
+    --background: #0f0a04;
+    --foreground: #fffbeb;
+    --foreground-muted: #fcd34d;
+    --primary: #f59e0b;
+    --secondary: #d97706;
+    --accent-blue: #fbbf24;
+    --border-color: rgba(245, 158, 11, 0.2);
+    --card-bg: #1a1107;
+    --grid-line: #2e1d0a;
+    --spotlight-opacity: 0.08;
+    --footer-bg: #0a0702;
+    --sidebar-bg: #1a1107;
+    --sidebar-border: rgba(245, 158, 11, 0.2);
+    --logo-base: #ffffff;
+    --card-gradient-start: #2e1d0a;
+    --card-gradient-end: #1a1107;
+    --hero-from: #422006;
+    --hero-via: #0f0a04;
+    --hero-to: #0a0702;
+    --lead-from: #422006;
+    --lead-via: #0f0a04;
+    --lead-to: #0a0702;
+    --lead-glow: rgba(245, 158, 11, 0.15);
+  }
+
+  /* ==============================================================
+     4. GREEN (EMERALD) THEMES
+  ============================================================== */
+  [data-theme="green-light"] {
+    --background: #ecfdf5;
+    --foreground: #022c22;
+    --foreground-muted: #047857;
+    --primary: #10b981;
+    --secondary: #059669;
+    --accent-blue: #34d399;
+    --border-color: rgba(5, 150, 105, 0.15);
+    --card-bg: #ffffff;
+    --grid-line: rgba(5, 150, 105, 0.05);
+    --spotlight-opacity: 0.1;
+    --footer-bg: #d1fae5;
+    --sidebar-bg: #ffffff;
+    --sidebar-border: rgba(5, 150, 105, 0.2);
+    --logo-base: #022c22;
+    --card-gradient-start: #ffffff;
+    --card-gradient-end: #ecfdf5;
+    --hero-from: #a7f3d0;
+    --hero-via: #ecfdf5;
+    --hero-to: #ffffff;
+    --lead-from: #a7f3d0;
+    --lead-via: #ecfdf5;
+    --lead-to: #ffffff;
+    --lead-glow: rgba(16, 185, 129, 0.1);
+  }
+
+  [data-theme="green-dark"] {
+    --background: #050f0a;
+    --foreground: #ecfdf5;
+    --foreground-muted: #6ee7b7;
+    --primary: #10b981;
+    --secondary: #059669;
+    --accent-blue: #34d399;
+    --border-color: rgba(16, 185, 129, 0.2);
+    --card-bg: #081a11;
+    --grid-line: #0f2e1e;
+    --spotlight-opacity: 0.08;
+    --footer-bg: #030a07;
+    --sidebar-bg: #081a11;
+    --sidebar-border: rgba(16, 185, 129, 0.2);
+    --logo-base: #ffffff;
+    --card-gradient-start: #0f2e1e;
+    --card-gradient-end: #081a11;
+    --hero-from: #022c22;
+    --hero-via: #050f0a;
+    --hero-to: #030a07;
+    --lead-from: #022c22;
+    --lead-via: #050f0a;
+    --lead-to: #030a07;
+    --lead-glow: rgba(16, 185, 129, 0.15);
+  }
+
+  /* ==============================================================
+     5. BLUE THEMES
+  ============================================================== */
+  [data-theme="blue-light"] {
+    --background: #eff6ff;
+    --foreground: #1e3a8a;
+    --foreground-muted: #2563eb;
+    --primary: #3b82f6;
+    --secondary: #2563eb;
+    --accent-blue: #60a5fa;
+    --border-color: rgba(37, 99, 235, 0.15);
+    --card-bg: #ffffff;
+    --grid-line: rgba(37, 99, 235, 0.05);
+    --spotlight-opacity: 0.1;
+    --footer-bg: #dbeafe;
+    --sidebar-bg: #ffffff;
+    --sidebar-border: rgba(37, 99, 235, 0.2);
+    --logo-base: #1e3a8a;
+    --card-gradient-start: #ffffff;
+    --card-gradient-end: #eff6ff;
+    --hero-from: #bfdbfe;
+    --hero-via: #eff6ff;
+    --hero-to: #ffffff;
+    --lead-from: #bfdbfe;
+    --lead-via: #eff6ff;
+    --lead-to: #ffffff;
+    --lead-glow: rgba(59, 130, 246, 0.1);
+  }
+
+  [data-theme="blue-dark"] {
+    --background: #050a0f;
+    --foreground: #eff6ff;
+    --foreground-muted: #93c5fd;
+    --primary: #3b82f6;
+    --secondary: #2563eb;
+    --accent-blue: #60a5fa;
+    --border-color: rgba(59, 130, 246, 0.2);
+    --card-bg: #0a121a;
+    --grid-line: #11202e;
+    --spotlight-opacity: 0.08;
+    --footer-bg: #03070a;
+    --sidebar-bg: #0a121a;
+    --sidebar-border: rgba(59, 130, 246, 0.2);
+    --logo-base: #ffffff;
+    --card-gradient-start: #11202e;
+    --card-gradient-end: #0a121a;
+    --hero-from: #1e3a8a;
+    --hero-via: #050a0f;
+    --hero-to: #03070a;
+    --lead-from: #1e3a8a;
+    --lead-via: #050a0f;
+    --lead-to: #03070a;
+    --lead-glow: rgba(59, 130, 246, 0.15);
+  }
+
+  /* ==============================================================
+     6. INDIGO THEMES
+  ============================================================== */
+  [data-theme="indigo-light"] {
+    --background: #eef2ff;
+    --foreground: #312e81;
+    --foreground-muted: #4f46e5;
+    --primary: #6366f1;
+    --secondary: #4f46e5;
+    --accent-blue: #818cf8;
+    --border-color: rgba(79, 70, 229, 0.15);
+    --card-bg: #ffffff;
+    --grid-line: rgba(79, 70, 229, 0.05);
+    --spotlight-opacity: 0.1;
+    --footer-bg: #e0e7ff;
+    --sidebar-bg: #ffffff;
+    --sidebar-border: rgba(79, 70, 229, 0.2);
+    --logo-base: #312e81;
+    --card-gradient-start: #ffffff;
+    --card-gradient-end: #eef2ff;
+    --hero-from: #c7d2fe;
+    --hero-via: #eef2ff;
+    --hero-to: #ffffff;
+    --lead-from: #c7d2fe;
+    --lead-via: #eef2ff;
+    --lead-to: #ffffff;
+    --lead-glow: rgba(99, 102, 241, 0.1);
+  }
+
+  [data-theme="indigo-dark"] {
+    --background: #08050f;
+    --foreground: #eef2ff;
+    --foreground-muted: #a5b4fc;
+    --primary: #6366f1;
+    --secondary: #4f46e5;
+    --accent-blue: #818cf8;
+    --border-color: rgba(99, 102, 241, 0.2);
+    --card-bg: #0f0a1a;
+    --grid-line: #1a122e;
+    --spotlight-opacity: 0.08;
+    --footer-bg: #05030a;
+    --sidebar-bg: #0f0a1a;
+    --sidebar-border: rgba(99, 102, 241, 0.2);
+    --logo-base: #ffffff;
+    --card-gradient-start: #1a122e;
+    --card-gradient-end: #0f0a1a;
+    --hero-from: #312e81;
+    --hero-via: #08050f;
+    --hero-to: #05030a;
+    --lead-from: #312e81;
+    --lead-via: #08050f;
+    --lead-to: #05030a;
+    --lead-glow: rgba(99, 102, 241, 0.15);
+  }
+
+  /* ==============================================================
+     7. VIOLET THEMES
+  ============================================================== */
+  [data-theme="violet-light"] {
+    --background: #faf5ff;
+    --foreground: #3b0764;
+    --foreground-muted: #7e22ce;
+    --primary: #8b5cf6;
+    --secondary: #7c3aed;
+    --accent-blue: #a78bfa;
+    --border-color: rgba(124, 58, 237, 0.15);
+    --card-bg: #ffffff;
+    --grid-line: rgba(124, 58, 237, 0.05);
+    --spotlight-opacity: 0.1;
+    --footer-bg: #f3e8ff;
+    --sidebar-bg: #ffffff;
+    --sidebar-border: rgba(124, 58, 237, 0.2);
+    --logo-base: #3b0764;
+    --card-gradient-start: #ffffff;
+    --card-gradient-end: #faf5ff;
+    --hero-from: #e9d5ff;
+    --hero-via: #faf5ff;
+    --hero-to: #ffffff;
+    --lead-from: #e9d5ff;
+    --lead-via: #faf5ff;
+    --lead-to: #ffffff;
+    --lead-glow: rgba(139, 92, 246, 0.1);
+  }
+
+  [data-theme="violet-dark"] {
+    --background: #0d050f;
+    --foreground: #faf5ff;
+    --foreground-muted: #c4b5fd;
+    --primary: #8b5cf6;
+    --secondary: #7c3aed;
+    --accent-blue: #a78bfa;
+    --border-color: rgba(139, 92, 246, 0.2);
+    --card-bg: #170a1a;
+    --grid-line: #29112e;
+    --spotlight-opacity: 0.08;
+    --footer-bg: #08030a;
+    --sidebar-bg: #170a1a;
+    --sidebar-border: rgba(139, 92, 246, 0.2);
+    --logo-base: #ffffff;
+    --card-gradient-start: #29112e;
+    --card-gradient-end: #170a1a;
+    --hero-from: #4c1d95;
+    --hero-via: #0d050f;
+    --hero-to: #08030a;
+    --lead-from: #4c1d95;
+    --lead-via: #0d050f;
+    --lead-to: #08030a;
+    --lead-glow: rgba(139, 92, 246, 0.15);
+  }
+}
+
+/* Ensure the body transitions smoothly when toggling themes */
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* Theme-independent toast & alert notifications */
+.app-toast {
+  background-color: #ffffff;
+  border-color: #e2e8f0;
+  color: #0f172a;
+}
+
+.app-toast-label {
+  color: #64748b;
+}
+
+.app-toast-icon {
+  color: #22c55e;
+}
+
+.app-toast-icon-circle-success {
+  background-color: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.app-toast-icon-circle-error {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.app-toast-close {
+  color: #94a3b8;
+}
+
+.app-toast-close:hover {
+  color: #0f172a;
+}

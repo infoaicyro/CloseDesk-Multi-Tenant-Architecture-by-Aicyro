@@ -1,0 +1,399 @@
+{
+  "ticket": "CD03",
+  "title": "Tenant Isolation and Secret Protection Baseline Evidence",
+  "timestamp": "2026-11-03T18:38:21.395Z",
+  "summary": {
+    "total_tests": 32,
+    "passed": 32,
+    "failed": 0,
+    "all_passed": true
+  },
+  "guarantees": {
+    "tenant_isolation": "ENFORCED (Derived strictly from verified server session; cross-tenant spoofing rejected with 403 Forbidden)",
+    "public_routing": "ISOLATED (Routing parameters separated from authorization; chatbot lead submission preserved)",
+    "rtdb_security_rules": "HARDENED (Parent /tenants read denied; settings/email_config restricted; 0 Firestore syntax)",
+    "secret_protection": "REDACTED (Passwords, SMTP credentials, OAuth tokens, and canaries masked across API responses)",
+    "global_sender_fallback": "GUARDED (Requires explicit allowGlobalSenderFallback: true permission per tenant)"
+  },
+  "results": [
+    {
+      "test_id": "AC1.1",
+      "name": "Tenant A operator authorized to access Tenant A leads",
+      "status": "PASS",
+      "details": "Expected status 200, got 200",
+      "evidence": {
+        "statusCode": 200,
+        "tenantId": "tenant_a"
+      },
+      "timestamp": "2026-11-03T18:10:40.110Z"
+    },
+    {
+      "test_id": "AC1.2",
+      "name": "Cross-tenant header tampering rejected (Tenant A session with x-tenant-id: tenant_b -> 403)",
+      "status": "PASS",
+      "details": "Expected status 403 Forbidden, got 403 ({\"error\":\"Cross-tenant access forbidden. Operator session is bound to tenant 'tenant_a', but requested tenant 'tenant_b'.\"})",
+      "evidence": {
+        "statusCode": 403,
+        "body": {
+          "error": "Cross-tenant access forbidden. Operator session is bound to tenant 'tenant_a', but requested tenant 'tenant_b'."
+        }
+      },
+      "timestamp": "2026-11-03T18:10:40.719Z"
+    },
+    {
+      "test_id": "AC1.3",
+      "name": "Cross-tenant query parameter tampering rejected (/api/leads?tenant_id=tenant_b -> 403)",
+      "status": "PASS",
+      "details": "Expected status 403 Forbidden, got 403 ({\"error\":\"Cross-tenant access forbidden. Operator session is bound to tenant 'tenant_a', but requested tenant 'tenant_b'.\"})",
+      "evidence": {
+        "statusCode": 403,
+        "body": {
+          "error": "Cross-tenant access forbidden. Operator session is bound to tenant 'tenant_a', but requested tenant 'tenant_b'."
+        }
+      },
+      "timestamp": "2026-11-03T18:10:41.329Z"
+    },
+    {
+      "test_id": "AC1.4",
+      "name": "Cross-tenant analytics tampering rejected (Tenant A session requesting tenant_b analytics -> 403)",
+      "status": "PASS",
+      "details": "Expected status 403 Forbidden, got 403 ({\"error\":\"Cross-tenant access forbidden. Operator session is bound to tenant 'tenant_a', but requested tenant 'tenant_b'.\"})",
+      "evidence": {
+        "statusCode": 403,
+        "body": {
+          "error": "Cross-tenant access forbidden. Operator session is bound to tenant 'tenant_a', but requested tenant 'tenant_b'."
+        }
+      },
+      "timestamp": "2026-11-03T18:10:41.947Z"
+    },
+    {
+      "test_id": "AC1.5",
+      "name": "Cross-tenant GET insights tampering rejected (Tenant A session with x-tenant-id: tenant_b -> 403)",
+      "status": "PASS",
+      "details": "Expected status 403 Forbidden, got 403 ({\"error\":\"Cross-tenant access forbidden. Operator session is bound to tenant 'tenant_a', but requested tenant 'tenant_b'.\"})",
+      "evidence": {
+        "statusCode": 403,
+        "body": {
+          "error": "Cross-tenant access forbidden. Operator session is bound to tenant 'tenant_a', but requested tenant 'tenant_b'."
+        }
+      },
+      "timestamp": "2026-11-03T18:10:42.558Z"
+    },
+    {
+      "test_id": "AC1.6",
+      "name": "Cross-tenant POST insights generation tampering rejected (Tenant A session targeting tenant_b -> 403)",
+      "status": "PASS",
+      "details": "Expected status 403 Forbidden, got 403 ({\"error\":\"Cross-tenant access forbidden. Operator session is bound to tenant 'tenant_a', but requested tenant 'tenant_b'.\"})",
+      "evidence": {
+        "statusCode": 403,
+        "body": {
+          "error": "Cross-tenant access forbidden. Operator session is bound to tenant 'tenant_a', but requested tenant 'tenant_b'."
+        }
+      },
+      "timestamp": "2026-11-03T18:10:43.168Z"
+    },
+    {
+      "test_id": "AC1.7",
+      "name": "Cross-tenant log query tampering rejected (/api/app-query with targetClientId: tenant_b -> 403)",
+      "status": "PASS",
+      "details": "Expected status 403 Forbidden, got 403 ({\"error\":\"Cross-tenant access forbidden. Operator session is bound to tenant 'tenant_a', cannot query logs for 'tenant_b'.\"})",
+      "evidence": {
+        "statusCode": 403,
+        "body": {
+          "error": "Cross-tenant access forbidden. Operator session is bound to tenant 'tenant_a', cannot query logs for 'tenant_b'."
+        }
+      },
+      "timestamp": "2026-11-03T18:10:43.781Z"
+    },
+    {
+      "test_id": "AC1.8",
+      "name": "Tenant A operator authorized to query own tenant logs partition (/api/app-query -> 200)",
+      "status": "PASS",
+      "details": "Expected status 200, got 200",
+      "evidence": {
+        "statusCode": 200,
+        "logsCount": 0
+      },
+      "timestamp": "2026-11-03T18:10:45.604Z"
+    },
+    {
+      "test_id": "AC2.1",
+      "name": "Anonymous GET /api/leads rejected with 401 Unauthorized",
+      "status": "PASS",
+      "details": "Expected status 401, got 401 ({\"error\":\"Authentication required. Active session missing or expired.\"})",
+      "evidence": {
+        "statusCode": 401,
+        "body": {
+          "error": "Authentication required. Active session missing or expired."
+        }
+      },
+      "timestamp": "2026-11-03T18:10:45.605Z"
+    },
+    {
+      "test_id": "AC2.2",
+      "name": "Anonymous GET /api/analytics rejected with 401 Unauthorized",
+      "status": "PASS",
+      "details": "Expected status 401, got 401 ({\"error\":\"Authentication required. Active session missing or expired.\"})",
+      "evidence": {
+        "statusCode": 401,
+        "body": {
+          "error": "Authentication required. Active session missing or expired."
+        }
+      },
+      "timestamp": "2026-11-03T18:10:45.605Z"
+    },
+    {
+      "test_id": "AC2.3",
+      "name": "Anonymous GET /api/insights rejected with 401 Unauthorized",
+      "status": "PASS",
+      "details": "Expected status 401, got 401 ({\"error\":\"Authentication required. Active session missing or expired.\"})",
+      "evidence": {
+        "statusCode": 401,
+        "body": {
+          "error": "Authentication required. Active session missing or expired."
+        }
+      },
+      "timestamp": "2026-11-03T18:10:45.605Z"
+    },
+    {
+      "test_id": "AC2.4",
+      "name": "Anonymous POST /api/insights rejected with 401 Unauthorized",
+      "status": "PASS",
+      "details": "Expected status 401, got 401 ({\"error\":\"Authentication required. Active session missing or expired.\"})",
+      "evidence": {
+        "statusCode": 401,
+        "body": {
+          "error": "Authentication required. Active session missing or expired."
+        }
+      },
+      "timestamp": "2026-11-03T18:10:45.606Z"
+    },
+    {
+      "test_id": "AC2.5",
+      "name": "Anonymous POST /api/app-query rejected with 401 Unauthorized (ignoring body spoofing)",
+      "status": "PASS",
+      "details": "Expected status 401, got 401 ({\"error\":\"Unauthorized. Authentication required.\"})",
+      "evidence": {
+        "statusCode": 401,
+        "body": {
+          "error": "Unauthorized. Authentication required."
+        }
+      },
+      "timestamp": "2026-11-03T18:10:45.607Z"
+    },
+    {
+      "test_id": "AC3.1",
+      "name": "SuperAdmin authorized to view Tenant A leads (delegation allowed)",
+      "status": "PASS",
+      "details": "Expected status 200, got 200",
+      "evidence": {
+        "statusCode": 200
+      },
+      "timestamp": "2026-11-03T18:10:46.820Z"
+    },
+    {
+      "test_id": "AC3.2",
+      "name": "SuperAdmin authorized to view Tenant B leads (cross-tenant delegation allowed)",
+      "status": "PASS",
+      "details": "Expected status 200, got 200",
+      "evidence": {
+        "statusCode": 200
+      },
+      "timestamp": "2026-11-03T18:10:48.031Z"
+    },
+    {
+      "test_id": "AC3.3",
+      "name": "SuperAdmin authorized to query comprehensive system logs without cross-tenant restriction",
+      "status": "PASS",
+      "details": "Expected status 200, got 200",
+      "evidence": {
+        "statusCode": 200,
+        "logsCount": 0
+      },
+      "timestamp": "2026-11-03T18:38:16.944Z"
+    },
+    {
+      "test_id": "AC4.1",
+      "name": "Public chatbot lead capture POST /api/leads succeeds without requiring operator session",
+      "status": "PASS",
+      "details": "Expected status 200, got 200 ({\"id\":\"lead_cd03_test_visitor_01\",\"success\":true})",
+      "evidence": {
+        "statusCode": 200,
+        "body": {
+          "id": "lead_cd03_test_visitor_01",
+          "success": true
+        }
+      },
+      "timestamp": "2026-11-03T18:38:18.419Z"
+    },
+    {
+      "test_id": "AC4.2",
+      "name": "Public routing resolution verifies header, query, body, host origin, and fallback",
+      "status": "PASS",
+      "details": "Resolutions: header=hvac_pros, query=plumbing_co, body=solar_power, origin=brightstar, fallback=default",
+      "evidence": {
+        "fromHeader": "hvac_pros",
+        "fromQuery": "plumbing_co",
+        "fromBody": "solar_power",
+        "fromOrigin": "brightstar",
+        "fallback": "default"
+      },
+      "timestamp": "2026-11-03T18:38:18.419Z"
+    },
+    {
+      "test_id": "AC4.3",
+      "name": "Tenant ID path traversal and invalid RTDB character stripping",
+      "status": "PASS",
+      "details": "Results: [superadmin, tenant_aleadssecrets, tenantid]",
+      "evidence": {
+        "traversalAttempt1": "superadmin",
+        "traversalAttempt2": "tenant_aleadssecrets",
+        "traversalAttempt3": "tenantid"
+      },
+      "timestamp": "2026-11-03T18:38:18.419Z"
+    },
+    {
+      "test_id": "AC5.1",
+      "name": "Realtime Database JSON rules syntax strictly verified (Zero Firestore rules syntax)",
+      "status": "PASS",
+      "details": "Valid RTDB JSON rules syntax",
+      "evidence": {
+        "hasFirestoreSyntax": false
+      },
+      "timestamp": "2026-11-03T18:38:18.420Z"
+    },
+    {
+      "test_id": "AC5.2",
+      "name": "Root database .read is strictly false (denies global unauthenticated dump)",
+      "status": "PASS",
+      "details": "rules[\".read\"] = false",
+      "evidence": {
+        "rootRead": false
+      },
+      "timestamp": "2026-11-03T18:38:18.420Z"
+    },
+    {
+      "test_id": "AC5.3",
+      "name": "Parent /tenants node .read is false (prohibits bulk dumping /tenants.json)",
+      "status": "PASS",
+      "details": "rules.tenants[\".read\"] = false",
+      "evidence": {
+        "parentTenantsRead": false
+      },
+      "timestamp": "2026-11-03T18:38:18.420Z"
+    },
+    {
+      "test_id": "AC5.4",
+      "name": "settings/email_config .read is strictly restricted (denies anonymous client dump)",
+      "status": "PASS",
+      "details": "rules.settings.email_config[\".read\"] = auth != null && auth.token.role === 'superadmin'",
+      "evidence": {
+        "emailConfigRead": "auth != null && auth.token.role === 'superadmin'"
+      },
+      "timestamp": "2026-11-03T18:38:18.420Z"
+    },
+    {
+      "test_id": "AC5.5",
+      "name": "system_security node is strictly locked (.read: false, .write: false)",
+      "status": "PASS",
+      "details": "system_security: .read=false, .write=false",
+      "evidence": {
+        "sysSecurity": {
+          ".read": false,
+          ".write": false
+        }
+      },
+      "timestamp": "2026-11-03T18:38:18.421Z"
+    },
+    {
+      "test_id": "AC5.6",
+      "name": "RTDB Cascade Analysis: Parent settings node denies read to prevent cascading leak of email_config",
+      "status": "PASS",
+      "details": "settings[\".read\"] = false",
+      "evidence": {
+        "parentSettingsRead": false
+      },
+      "timestamp": "2026-11-03T18:38:18.421Z"
+    },
+    {
+      "test_id": "AC6.1",
+      "name": "redactSensitiveSecrets deeply masks passwords, SMTP credentials, OAuth secrets, and canaries",
+      "status": "PASS",
+      "details": "Leak check: smtp=false, refresh=false, pass=false, rawPass=false",
+      "evidence": {
+        "redactedSample": {
+          "smtpEmail": "bot@canary.com",
+          "smtpPassword": "[REDACTED]",
+          "clientSecret": "[REDACTED]",
+          "refreshToken": "[REDACTED]"
+        }
+      },
+      "timestamp": "2026-11-03T18:38:18.421Z"
+    },
+    {
+      "test_id": "AC6.2",
+      "name": "SuperAdmin GET /api/superadmin/tenants redacts tenant user passwords in response payload",
+      "status": "PASS",
+      "details": "Expected status 200 without raw password hashes, got statusCode=200, hasRawScrypt=false",
+      "evidence": {
+        "statusCode": 200
+      },
+      "timestamp": "2026-11-03T18:38:19.832Z"
+    },
+    {
+      "test_id": "AC6.3",
+      "name": "Source code audit: Zero hardcoded private keys or synthetic canaries in application bundles",
+      "status": "PASS",
+      "details": "Scanned 94 files in src/ and public/ without secret leaks.",
+      "evidence": {
+        "filesScanned": 94,
+        "leaks": []
+      },
+      "timestamp": "2026-11-03T18:38:21.393Z"
+    },
+    {
+      "test_id": "AC7.1",
+      "name": "Tenant lacking custom SMTP with allowGlobalSenderFallback: false throws GLOBAL_FALLBACK_UNAUTHORIZED",
+      "status": "PASS",
+      "details": "Blocked dispatch and rejected unauthorized fallback.",
+      "evidence": {
+        "blockedCorrectly": true
+      },
+      "timestamp": "2026-11-03T18:38:21.394Z"
+    },
+    {
+      "test_id": "AC7.2",
+      "name": "Tenant with allowGlobalSenderFallback: true authorized to use platform global sender fallback",
+      "status": "PASS",
+      "details": "Authorized: true, usedFallback: true",
+      "evidence": {
+        "authorized": true,
+        "usedFallback": true,
+        "provider": "platform_global"
+      },
+      "timestamp": "2026-11-03T18:38:21.394Z"
+    },
+    {
+      "test_id": "AC7.3",
+      "name": "Tenant with custom SMTP dispatches through custom transporter regardless of fallback flag",
+      "status": "PASS",
+      "details": "Authorized: true, usedFallback: false",
+      "evidence": {
+        "authorized": true,
+        "usedFallback": false,
+        "provider": "custom_tenant"
+      },
+      "timestamp": "2026-11-03T18:38:21.394Z"
+    },
+    {
+      "test_id": "AC7.4",
+      "name": "functions/index.js contains explicit fallback check and rejected_fallback_unauthorized alert handling",
+      "status": "PASS",
+      "details": "Verified code implementation in functions/index.js",
+      "evidence": {
+        "hasFallbackCheck": true
+      },
+      "timestamp": "2026-11-03T18:38:21.395Z"
+    }
+  ]
+}

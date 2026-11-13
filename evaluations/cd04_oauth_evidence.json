@@ -1,0 +1,294 @@
+{
+  "ticket": "CD04",
+  "title": "OAuth Account Linking and Provider Security Evidence",
+  "timestamp": "2026-11-03T18:10:31.651Z",
+  "summary": {
+    "total_tests": 25,
+    "passed": 25,
+    "failed": 0,
+    "all_passed": true
+  },
+  "guarantees": {
+    "state_binding": "ENFORCED (Cryptographically binds operator, tenantId, provider, redirect, nonce, and exp)",
+    "replay_defense": "ENFORCED (Single-use cryptographic nonces reject state replay attacks)",
+    "least_necessary_scopes": "ENFORCED (gmail.send and SMTP.Send; broad mailbox access strictly disallowed)",
+    "identity_token_validation": "ENFORCED (Signature, issuer, audience, exp/iat, and nonce verified beyond base64)",
+    "cross_window_messaging": "HARDENED (Wildcard '*' eliminated; exact trusted origin and schema enforced)",
+    "tenant_isolation": "ENFORCED (Wrong-tenant linking blocked; credentials stored in bound partition)",
+    "revocation_state": "ENFORCED (Revoked credentials disable transporter with OAUTH_CREDENTIALS_REVOKED and show recoverable UI)",
+    "calendar_sync_boundary": "VERIFIED (OAuth storage strictly handles outgoing email; calendar sync out of scope)"
+  },
+  "results": [
+    {
+      "test_id": "AC1.1",
+      "name": "State token cryptographically binds operator, tenantId, provider, nonce, and expiration",
+      "status": "PASS",
+      "details": "State verified: sub=superadmin_alice, tenant=tenant_alpha, nonce=f94bfffb266770c5fda69221b66f33d1",
+      "evidence": {
+        "sub": "superadmin_alice",
+        "tenantId": "tenant_alpha",
+        "provider": "google",
+        "redirectUri": "http://localhost:3000/api/auth/google/callback",
+        "nonce": "f94bfffb266770c5fda69221b66f33d1",
+        "iat": 1793729431,
+        "exp": 1793730031
+      },
+      "timestamp": "2026-11-03T18:10:31.130Z"
+    },
+    {
+      "test_id": "AC1.2",
+      "name": "Callback rejects request with absent state parameter (400 Bad Request)",
+      "status": "PASS",
+      "details": "Expected status 400 with missing state error, got 400",
+      "evidence": {
+        "statusCode": 400
+      },
+      "timestamp": "2026-11-03T18:10:31.131Z"
+    },
+    {
+      "test_id": "AC1.3",
+      "name": "Mismatched/tampered state token is rejected with signature validation error",
+      "status": "PASS",
+      "details": "Result: valid=false, error=Invalid OAuth state cryptographic signature (tampering detected)",
+      "evidence": {
+        "error": "Invalid OAuth state cryptographic signature (tampering detected)"
+      },
+      "timestamp": "2026-11-03T18:10:31.131Z"
+    },
+    {
+      "test_id": "AC1.4",
+      "name": "Expired state parameter is rejected (replay window closed)",
+      "status": "PASS",
+      "details": "Result: valid=false, error=OAuth state token has expired (replay window closed)",
+      "evidence": {
+        "error": "OAuth state token has expired (replay window closed)"
+      },
+      "timestamp": "2026-11-03T18:10:31.131Z"
+    },
+    {
+      "test_id": "AC1.5",
+      "name": "State token replay rejection (single-use nonce prevents replay attacks)",
+      "status": "PASS",
+      "details": "Attempt 1: valid=true, Attempt 2: valid=false (OAuth state token has already been consumed (replay attack rejected))",
+      "evidence": {
+        "firstValid": true,
+        "secondError": "OAuth state token has already been consumed (replay attack rejected)"
+      },
+      "timestamp": "2026-11-03T18:10:31.132Z"
+    },
+    {
+      "test_id": "AC1.6",
+      "name": "Cross-provider state spoofing rejected (Google state sent to Microsoft handler)",
+      "status": "PASS",
+      "details": "Result: valid=false, error=OAuth state provider mismatch (bound to 'google', expected 'microsoft')",
+      "evidence": {
+        "error": "OAuth state provider mismatch (bound to 'google', expected 'microsoft')"
+      },
+      "timestamp": "2026-11-03T18:10:31.132Z"
+    },
+    {
+      "test_id": "AC2.1",
+      "name": "Google OAuth requests least necessary scopes (gmail.send) and disallows full mailbox access",
+      "status": "PASS",
+      "details": "Scopes: openid https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/gmail.send (fullMailboxPresent=false)",
+      "evidence": {
+        "scopes": "openid https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/gmail.send",
+        "hasFullMailbox": false
+      },
+      "timestamp": "2026-11-03T18:10:31.132Z"
+    },
+    {
+      "test_id": "AC2.2",
+      "name": "Microsoft OAuth requests least necessary scopes (SMTP.Send) and disallows broad Mail.ReadWrite",
+      "status": "PASS",
+      "details": "Scopes: openid email offline_access https://outlook.office.com/SMTP.Send (broadMailboxPresent=false)",
+      "evidence": {
+        "scopes": "openid email offline_access https://outlook.office.com/SMTP.Send",
+        "hasFullMailbox": false
+      },
+      "timestamp": "2026-11-03T18:10:31.132Z"
+    },
+    {
+      "test_id": "AC2.3",
+      "name": "Disabled/unconfigured OAuth provider returns 503 status without redirecting to broken endpoint",
+      "status": "PASS",
+      "details": "Expected status 503 with disabled status, got 503 ({\"error\":\"Google OAuth provider is not configured or disabled.\",\"provider\":\"google\",\"status\":\"disabled\"})",
+      "evidence": {
+        "statusCode": 503,
+        "body": {
+          "error": "Google OAuth provider is not configured or disabled.",
+          "provider": "google",
+          "status": "disabled"
+        }
+      },
+      "timestamp": "2026-11-03T18:10:31.133Z"
+    },
+    {
+      "test_id": "AC2.4",
+      "name": "PKCE RFC 7636 code_verifier and SHA-256 code_challenge generated",
+      "status": "PASS",
+      "details": "verifierLen=43, method=S256",
+      "evidence": {
+        "method": "S256"
+      },
+      "timestamp": "2026-11-03T18:10:31.133Z"
+    },
+    {
+      "test_id": "AC3.1",
+      "name": "Valid ID token claims (signature, issuer, audience, time, nonce) successfully validated",
+      "status": "PASS",
+      "details": "Result: valid=true, email=operator@verified-domain.com",
+      "evidence": {
+        "email": "operator@verified-domain.com"
+      },
+      "timestamp": "2026-11-03T18:10:31.133Z"
+    },
+    {
+      "test_id": "AC3.2",
+      "name": "Expired ID token rejected ('exp' claim validation)",
+      "status": "PASS",
+      "details": "Result: valid=false, error=ID token expired at 2026-11-03T18:00:31.000Z",
+      "evidence": {
+        "error": "ID token expired at 2026-11-03T18:00:31.000Z"
+      },
+      "timestamp": "2026-11-03T18:10:31.133Z"
+    },
+    {
+      "test_id": "AC3.3",
+      "name": "ID token with mismatched audience rejected ('aud' claim validation)",
+      "status": "PASS",
+      "details": "Result: valid=false, error=ID token audience mismatch: expected 'test_google_client_id_789.apps.googleusercontent.com', got '\"different_malicious_client_id\"'",
+      "evidence": {
+        "error": "ID token audience mismatch: expected 'test_google_client_id_789.apps.googleusercontent.com', got '\"different_malicious_client_id\"'"
+      },
+      "timestamp": "2026-11-03T18:10:31.133Z"
+    },
+    {
+      "test_id": "AC3.4",
+      "name": "ID token with invalid issuer rejected ('iss' claim validation)",
+      "status": "PASS",
+      "details": "Result: valid=false, error=Invalid Google ID token issuer: 'https://evil-untrusted-issuer.com'",
+      "evidence": {
+        "error": "Invalid Google ID token issuer: 'https://evil-untrusted-issuer.com'"
+      },
+      "timestamp": "2026-11-03T18:10:31.133Z"
+    },
+    {
+      "test_id": "AC3.5",
+      "name": "ID token with mismatched nonce rejected (replay/cross-session injection defense)",
+      "status": "PASS",
+      "details": "Result: valid=false, error=ID token nonce mismatch: expected 'nonce_random_canary_4455', got 'attacker_forged_nonce'",
+      "evidence": {
+        "error": "ID token nonce mismatch: expected 'nonce_random_canary_4455', got 'attacker_forged_nonce'"
+      },
+      "timestamp": "2026-11-03T18:10:31.133Z"
+    },
+    {
+      "test_id": "AC3.6",
+      "name": "ID token with insecure algorithm 'none' rejected",
+      "status": "PASS",
+      "details": "Result: valid=false, error=Insecure JWT algorithm: 'none' is disallowed",
+      "evidence": {
+        "error": "Insecure JWT algorithm: 'none' is disallowed"
+      },
+      "timestamp": "2026-11-03T18:10:31.133Z"
+    },
+    {
+      "test_id": "AC4.1",
+      "name": "PostMessage response eliminates wildcard targetOrigin ('*') and enforces exact trusted origin",
+      "status": "PASS",
+      "details": "Exact origin enforced: true, Wildcard present: false",
+      "evidence": {
+        "hasExactOrigin": true,
+        "hasWildcardOrigin": false
+      },
+      "timestamp": "2026-11-03T18:10:31.133Z"
+    },
+    {
+      "test_id": "AC4.2",
+      "name": "PostMessage transmits connection status schema and strictly omits access/refresh tokens",
+      "status": "PASS",
+      "details": "Status present: true, Tokens omitted: true",
+      "evidence": {
+        "hasStatus": true,
+        "hasRefreshToken": false,
+        "hasAccessToken": false
+      },
+      "timestamp": "2026-11-03T18:10:31.133Z"
+    },
+    {
+      "test_id": "AC4.3",
+      "name": "SuperAdminEmailProtocol.jsx verifies exact event.origin, popup source window, and message schema",
+      "status": "PASS",
+      "details": "Origin check: true, Source window check: true, Schema check: true",
+      "evidence": {
+        "hasOriginCheck": true,
+        "hasSourceCheck": true,
+        "hasSchemaCheck": true
+      },
+      "timestamp": "2026-11-03T18:10:31.134Z"
+    },
+    {
+      "test_id": "AC5.1",
+      "name": "OAuth state generation binds initiating operator's verified session tenant (ignoring URL tampering)",
+      "status": "PASS",
+      "details": "Bound tenant in state: 'tenant_a' (Expected: 'tenant_a')",
+      "evidence": {
+        "boundTenant": "tenant_a"
+      },
+      "timestamp": "2026-11-03T18:10:31.134Z"
+    },
+    {
+      "test_id": "AC5.2",
+      "name": "Callback routes tenant operator credentials to tenant partition (tenants/{tenantId}/email_config)",
+      "status": "PASS",
+      "details": "Computed targetPath: 'tenants/tenant_x/email_config'",
+      "evidence": {
+        "targetPath": "tenants/tenant_x/email_config"
+      },
+      "timestamp": "2026-11-03T18:10:31.134Z"
+    },
+    {
+      "test_id": "AC6.1",
+      "name": "revokeOAuthToken dispatches revocation to provider endpoint",
+      "status": "PASS",
+      "details": "Revoke result: {\"success\":false,\"revoked\":false}",
+      "evidence": {
+        "success": false,
+        "revoked": false
+      },
+      "timestamp": "2026-11-03T18:10:31.650Z"
+    },
+    {
+      "test_id": "AC6.2",
+      "name": "functions/index.js dynamic transporter disables feature on revoked/disconnected OAuth credentials",
+      "status": "PASS",
+      "details": "Verified OAUTH_CREDENTIALS_REVOKED check in functions/index.js",
+      "evidence": {
+        "hasRevokedCheck": true
+      },
+      "timestamp": "2026-11-03T18:10:31.650Z"
+    },
+    {
+      "test_id": "AC6.3",
+      "name": "SuperAdminEmailProtocol disconnect flow clears stored refresh token and triggers recoverable state",
+      "status": "PASS",
+      "details": "Verified disconnect handler in SuperAdminEmailProtocol.jsx",
+      "evidence": {
+        "hasDisconnectHandler": true
+      },
+      "timestamp": "2026-11-03T18:10:31.651Z"
+    },
+    {
+      "test_id": "AC7.1",
+      "name": "Ticket boundary verified: OAuth storage is scoped to outgoing mail and is NOT calendar synchronization",
+      "status": "PASS",
+      "details": "Google scopes contain calendar: false, Microsoft scopes contain calendar: false",
+      "evidence": {
+        "hasGoogleCalendarScope": false,
+        "hasMsCalendarScope": false
+      },
+      "timestamp": "2026-11-03T18:10:31.651Z"
+    }
+  ]
+}

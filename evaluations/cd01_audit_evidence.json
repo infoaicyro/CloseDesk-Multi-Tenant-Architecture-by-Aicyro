@@ -1,0 +1,383 @@
+{
+  "audit_id": "CD01_BASELINE_EVIDENCE",
+  "generated_at": "2026-11-03T18:39:27.560Z",
+  "git": {
+    "headCommit": "6da8781737a63a74a3e81db44d473de3022be583",
+    "branch": "feat/cd05-public-endpoint-controls-budgets"
+  },
+  "runtime": {
+    "node": "v26.8.2",
+    "package": {
+      "name": "closedesk-engine",
+      "version": "2.1.0",
+      "engines": {
+        "node": ">=20"
+      },
+      "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start",
+        "lint": "eslint .",
+        "test:ai": "node scripts/run_evaluations.js",
+        "audit:cd01": "node scripts/cd01_baseline_audit.js",
+        "test:cd02": "node scripts/cd02_security_acceptance_suite.js",
+        "test:cd03": "node scripts/cd03_isolation_and_secrets_suite.js",
+        "test:cd04": "node scripts/cd04_oauth_linking_suite.js",
+        "test:cd05": "node scripts/cd05_public_controls_and_budgets_suite.js"
+      }
+    }
+  },
+  "policy_hashes": {
+    "ruleBook": "8125aa618e7c4871d8f5fb62d4c1f9510dcc66c01f49b63fc44588cf8c5f57ee",
+    "visionRuleBook": "09bccc15b48f40efda925497b1d8ca5f84a01947ce9bbdfae17a2a5804c71a19",
+    "databaseRules": "2603d6dfc2bdecf30a449aed429197b1eb41b3cd3d281fdc0082f2195a8560e9"
+  },
+  "evaluation_artifact": {
+    "rawReportPath": "evaluations/report_v2.1.0.json",
+    "timestamp": "2026-08-20T14:02:46.594Z",
+    "policy_version": "2.1.0",
+    "totalScenarios": 3,
+    "passedScenarios": 2,
+    "failedScenarios": 1,
+    "totalChecks": 4,
+    "passedChecks": 3,
+    "failedChecks": 1,
+    "scenarioDetails": [
+      {
+        "scenario": "Pricing First",
+        "status": "PASS",
+        "critical": false,
+        "checkCount": 2,
+        "checks": [
+          {
+            "name": "Factual Pricing Given",
+            "passed": true
+          },
+          {
+            "name": "Intent Logged",
+            "passed": true
+          }
+        ],
+        "ai_reply": "CloseDesk offers two pricing tiers: the Starter plan at $97/month for a Text Chatbot, and the Pro plan at $297/month for Voice & Text AI."
+      },
+      {
+        "scenario": "Immediate Human Handoff",
+        "status": "FAIL",
+        "critical": false,
+        "checkCount": 1,
+        "checks": [
+          {
+            "name": "Action State Switched",
+            "passed": false
+          }
+        ],
+        "ai_reply": "I understand you'd like to speak with a human. Our team is currently away, but I can take your details for a callback. Would you like to provide your contact information?"
+      },
+      {
+        "scenario": "Critical Data Deletion Trigger",
+        "status": "PASS",
+        "critical": true,
+        "checkCount": 1,
+        "checks": [
+          {
+            "name": "Deletion Flag Emitted",
+            "passed": true
+          }
+        ],
+        "ai_reply": "I can't delete your data just yet, but I've noted your request. I'll flag it for deletion once we process it."
+      }
+    ]
+  },
+  "inspected_files_count": 41,
+  "telephony_violations_count": 0,
+  "verified_files": [
+    {
+      "path": "package.json",
+      "sizeBytes": 1151
+    },
+    {
+      "path": "netlify.toml",
+      "sizeBytes": 597
+    },
+    {
+      "path": "firebase.json",
+      "sizeBytes": 363
+    },
+    {
+      "path": ".firebaserc",
+      "sizeBytes": 62
+    },
+    {
+      "path": "database.rules.json",
+      "sizeBytes": 4155
+    },
+    {
+      "path": "src/lib/ruleBook.js",
+      "sizeBytes": 28819
+    },
+    {
+      "path": "src/lib/visionRuleBook.js",
+      "sizeBytes": 2625
+    },
+    {
+      "path": "evaluations/report_v2.1.0.json",
+      "sizeBytes": 1361
+    },
+    {
+      "path": "public/widget.js",
+      "sizeBytes": 22408
+    },
+    {
+      "path": "src/Closedesk/Chatbot/AicyroChatbot.jsx",
+      "sizeBytes": 93678
+    },
+    {
+      "path": "src/pages/api/chat.js",
+      "sizeBytes": 19669
+    },
+    {
+      "path": "src/pages/api/app-query.js",
+      "sizeBytes": 5815
+    },
+    {
+      "path": "src/pages/api/openai-token.js",
+      "sizeBytes": 11498
+    },
+    {
+      "path": "src/pages/api/tts.js",
+      "sizeBytes": 3743
+    },
+    {
+      "path": "src/pages/api/sync-voice.js",
+      "sizeBytes": 10038
+    },
+    {
+      "path": "src/Closedesk/Dashboard/Booking.jsx",
+      "sizeBytes": 36432
+    },
+    {
+      "path": "src/pages/api/auth/google/login.js",
+      "sizeBytes": 2188
+    },
+    {
+      "path": "src/pages/api/auth/google/callback.js",
+      "sizeBytes": 4451
+    },
+    {
+      "path": "src/pages/api/auth/microsoft/login.js",
+      "sizeBytes": 2209
+    },
+    {
+      "path": "src/pages/api/auth/microsoft/callback.js",
+      "sizeBytes": 4258
+    },
+    {
+      "path": "src/pages/api/leads.js",
+      "sizeBytes": 10700
+    },
+    {
+      "path": "src/pages/api/cron/retention-cleanup.js",
+      "sizeBytes": 3446
+    },
+    {
+      "path": "src/Closedesk/Dashboard/Conversations.jsx",
+      "sizeBytes": 32711
+    },
+    {
+      "path": "src/pages/api/analyze-image.js",
+      "sizeBytes": 6333
+    },
+    {
+      "path": "src/Closedesk/Dashboard/Report.jsx",
+      "sizeBytes": 32962
+    },
+    {
+      "path": "src/Closedesk/Dashboard/LiveNotifications.jsx",
+      "sizeBytes": 13095
+    },
+    {
+      "path": "src/Closedesk/Dashboard/Settings/notification-settings.jsx",
+      "sizeBytes": 8688
+    },
+    {
+      "path": "src/lib/notificationHelper.js",
+      "sizeBytes": 1468
+    },
+    {
+      "path": "src/lib/alertManager.js",
+      "sizeBytes": 2290
+    },
+    {
+      "path": "src/pages/api/generate-email.js",
+      "sizeBytes": 2979
+    },
+    {
+      "path": "functions/index.js",
+      "sizeBytes": 24939
+    },
+    {
+      "path": "docs/VOICE_PRIVACY_POLICY.md",
+      "sizeBytes": 1826
+    },
+    {
+      "path": "docs/VOICE_PRODUCTION_READINESS_SIGNOFF.md",
+      "sizeBytes": 5354
+    },
+    {
+      "path": "docs/VOICE_QA_TEST_SUITE.md",
+      "sizeBytes": 7169
+    },
+    {
+      "path": "docs/LOGGING_SCHEMA.md",
+      "sizeBytes": 4183
+    },
+    {
+      "path": "scripts/run_evaluations.js",
+      "sizeBytes": 3379
+    },
+    {
+      "path": "scripts/industry_regression_suite.js",
+      "sizeBytes": 6462
+    },
+    {
+      "path": "scripts/qa-simulator.js",
+      "sizeBytes": 2797
+    },
+    {
+      "path": "scripts/vad_tuning_harness.js",
+      "sizeBytes": 2869
+    },
+    {
+      "path": "scripts/voice_qa_harness.js",
+      "sizeBytes": 3033
+    },
+    {
+      "path": "scripts/e2e_master_suite.js",
+      "sizeBytes": 21982
+    }
+  ],
+  "capabilities_matrix": {
+    "Website text": {
+      "status": "Implemented",
+      "tested": true,
+      "deployed": true,
+      "evidence": {
+        "ui": "public/widget.js:593-611, src/Closedesk/Chatbot/AicyroChatbot.jsx:1040-1080",
+        "api": "src/pages/api/chat.js:108-367, src/pages/api/app-query.js:39-120",
+        "db": "Firebase Realtime Database (prospects, transcripts, analytics_events)",
+        "tests": "scripts/run_evaluations.js:1-117, scripts/qa-simulator.js:34-37"
+      }
+    },
+    "Browser voice": {
+      "status": "Implemented",
+      "tested": true,
+      "deployed": true,
+      "evidence": {
+        "ui": "src/Closedesk/Chatbot/AicyroChatbot.jsx:500-645",
+        "api": "src/pages/api/openai-token.js:26-277, src/pages/api/tts.js:14-55, src/pages/api/sync-voice.js:11-223",
+        "db": "Firebase Realtime Database (voice_telemetry, voice_errors, transcripts)",
+        "rollback_killswitch": "src/lib/ruleBook.js:11-23, src/pages/api/openai-token.js:111-116",
+        "tests": "scripts/vad_tuning_harness.js:1-88, scripts/voice_qa_harness.js:1-111, docs/VOICE_QA_TEST_SUITE.md:1-93"
+      }
+    },
+    "Booking": {
+      "status": "Implemented",
+      "tested": true,
+      "deployed": true,
+      "evidence": {
+        "ui": "src/Closedesk/Dashboard/Booking.jsx:43-177, src/Closedesk/Chatbot/AicyroChatbot.jsx:932-995",
+        "api": "src/pages/api/leads.js:40-172, src/pages/api/chat.js:39-40, 73-77",
+        "db": "Firebase Realtime Database (leads, tenants/$tenant_id/leads)",
+        "calendar_oauth_scope_note": "OAuth scopes in auth/google and auth/microsoft are SMTP mail only; direct Google/Outlook Calendar API event creation is not wired",
+        "tests": "scripts/e2e_master_suite.js:292-312, scripts/industry_regression_suite.js:22-30"
+      }
+    },
+    "Rescheduling": {
+      "status": "Unsupported",
+      "tested": false,
+      "deployed": false,
+      "evidence": {
+        "frontend_status_dropdown": "src/Closedesk/Dashboard/Booking.jsx:526-538 (manual RTDB string update)",
+        "email_template_footer": "functions/index.js:406 (reply to email prompt)",
+        "backend_api": "No implementation found in codebase",
+        "automated_logic": "No implementation found in codebase"
+      }
+    },
+    "Cancellation": {
+      "status": "Unsupported",
+      "tested": false,
+      "deployed": false,
+      "evidence": {
+        "frontend_status_dropdown": "src/Closedesk/Dashboard/Booking.jsx:528-538 (manual RTDB string update)",
+        "ui_modal_cancel_buttons": "src/Closedesk/Chatbot/AicyroChatbot.jsx:1341, src/Closedesk/Dashboard/CookieDataDisplay.jsx:450, src/Closedesk/Dashboard/superadmin/ClientManagement.jsx:966",
+        "backend_api": "No implementation found in codebase",
+        "automated_logic": "No implementation found in codebase"
+      }
+    },
+    "Recordings": {
+      "status": "Disabled",
+      "tested": true,
+      "deployed": true,
+      "evidence": {
+        "policy": "docs/VOICE_PRIVACY_POLICY.md:5-7 (Raw audio storage explicitly disabled by policy)",
+        "transcripts_api": "src/pages/api/sync-voice.js:88-98 (text transcripts only)",
+        "telemetry_api": "src/pages/api/sync-voice.js:31-57 (latency metrics only)",
+        "retention_cleanup": "src/pages/api/cron/retention-cleanup.js:8-73",
+        "dashboard_transcript_viewer": "src/Closedesk/Dashboard/Conversations.jsx:72-83"
+      }
+    },
+    "Image analysis": {
+      "status": "Implemented",
+      "tested": true,
+      "deployed": true,
+      "evidence": {
+        "ui": "src/Closedesk/Chatbot/AicyroChatbot.jsx:336-395 (camera/photo upload)",
+        "api": "src/pages/api/analyze-image.js:22-109 (OpenAI gpt-4o-mini vision)",
+        "policy": "src/lib/visionRuleBook.js:1-52 (Vision Policy v1.1.0, 9 trade domains)",
+        "storage": "Firebase Storage (chat_images) & Firebase Realtime Database (last_vision_inspection)"
+      }
+    },
+    "Exports": {
+      "status": "Implemented",
+      "tested": false,
+      "deployed": true,
+      "evidence": {
+        "frontend_csv_export": "src/Closedesk/Dashboard/Report.jsx:261-272 (client-side data URI CSV download)",
+        "frontend_email_export": "src/Closedesk/Dashboard/Report.jsx:274-278 (mailto: trigger)",
+        "frontend_pdf_export": "src/Closedesk/Dashboard/Report.jsx:285 (window.print)",
+        "backend_api": "No implementation found in codebase (client-side data synthesis only)"
+      }
+    },
+    "Notifications": {
+      "status": "Implemented",
+      "tested": true,
+      "deployed": true,
+      "evidence": {
+        "ui_feed": "src/Closedesk/Dashboard/LiveNotifications.jsx:61-82",
+        "ui_settings": "src/Closedesk/Dashboard/Settings/notification-settings.jsx:38-76",
+        "helper": "src/lib/notificationHelper.js:6-54 (queueEmailAlert pushes to email_alerts)",
+        "alert_manager": "src/lib/alertManager.js:17-61 (processSmartAlert pushes to system_alerts)",
+        "cloud_function": "functions/index.js:152-349 (sendEmailAlert onCreate trigger + dynamic SMTP)",
+        "external_webhook": "src/pages/api/generate-email.js:5-55 (Make.com email trigger)"
+      }
+    }
+  },
+  "missing_scheduler_audit": {
+    "section": "8.3",
+    "findings": [
+      {
+        "component": "Daily Retention Cleanup Cron",
+        "documented_path": "TECHNICAL_ARCHITECTURE.md:132-134 (.github/workflows/retention-cron.yml)",
+        "code_endpoint": "src/pages/api/cron/retention-cleanup.js:20-84",
+        "disk_status": "MISSING_TRIGGER",
+        "details": ".github directory is completely absent from disk. netlify.toml and firebase.json contain no cron trigger or scheduler for /api/cron/retention-cleanup. Endpoint is unwired to any automated scheduler."
+      },
+      {
+        "component": "Automated Reminder Cron",
+        "code_function": "functions/index.js:354-443 (exports.processScheduledReminders = functions.pubsub.schedule('every 1 hours'))",
+        "disk_status": "STANDALONE_CLOUD_FUNCTION",
+        "details": "Configured via Firebase PubSub Cloud Scheduler inside functions/index.js, but independent from Netlify deployment and requires Google Cloud Functions deployment with active GCP billing."
+      }
+    ]
+  }
+}
