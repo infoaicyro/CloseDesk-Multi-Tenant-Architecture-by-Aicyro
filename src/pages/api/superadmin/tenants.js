@@ -12,6 +12,11 @@ import {
   safeDbUpdate,
   safeDbRemove,
 } from "../../../lib/safeDb";
+import {
+  validateTenantReadiness,
+  assertTenantActivationReadiness,
+  TENANT_ACTIVATION_STATUS,
+} from "../../../lib/onboardingContract";
 
 async function handler(req, res, apiLogger) {
   const session = req.session;
@@ -70,6 +75,18 @@ async function handler(req, res, apiLogger) {
         }
       }
 
+      // CD11: Operational Readiness Verification upon creation
+      const readiness = validateTenantReadiness({
+        id: cleanTenantId,
+        ...tenantPayload,
+      });
+
+      // Tenant cannot be enabled/active until operational checklist passes
+      tenantPayload.enabled = readiness.ready;
+      tenantPayload.activation_status = readiness.status;
+      tenantPayload.readiness_score = readiness.score;
+      tenantPayload.activation_checklist = readiness.checklist;
+
       tenantPayload.createdAt = Date.now();
       tenantPayload.createdBy = session.sub;
 
@@ -89,6 +106,11 @@ async function handler(req, res, apiLogger) {
         success: true,
         tenantId: cleanTenantId,
         message: `Tenant ${cleanTenantId} created successfully.`,
+        readiness: {
+          ready: readiness.ready,
+          status: readiness.status,
+          score: readiness.score,
+        },
       });
     } catch (err) {
       apiLogger.error("Tenant creation error:", err);
@@ -164,6 +186,40 @@ async function handler(req, res, apiLogger) {
       }
 
       if (updates) {
+        // CD11: Gate activation behind operational readiness checklist
+        if (updates.enabled === true || updates.activation_status === TENANT_ACTIVATION_STATUS.ACTIVE) {
+          let currentTenantData = {};
+          try {
+            const currentSnap = await safeDbGet(ref(db, `tenants/${cleanTenantId}`), 500);
+            if (currentSnap && currentSnap.exists()) {
+              currentTenantData = currentSnap.val();
+            }
+          } catch (_) {}
+
+          const merged = {
+            ...currentTenantData,
+            ...updates,
+            id: cleanTenantId,
+          };
+
+          try {
+            assertTenantActivationReadiness(merged);
+            updates.activation_status = TENANT_ACTIVATION_STATUS.ACTIVE;
+            updates.enabled = true;
+          } catch (readinessErr) {
+            apiLogger.warn("tenant_activation_blocked", {
+              tenant_id: cleanTenantId,
+              missing: readinessErr.missing,
+            });
+            return res.status(422).json({
+              error: readinessErr.message,
+              code: "TENANT_ACTIVATION_REQUIREMENTS_UNMET",
+              missing: readinessErr.missing,
+              checklist: readinessErr.checklist,
+            });
+          }
+        }
+
         try {
           await safeDbUpdate(ref(db, `tenants/${cleanTenantId}`), updates, 600);
         } catch (e) {

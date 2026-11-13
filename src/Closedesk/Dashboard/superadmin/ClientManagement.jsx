@@ -8,6 +8,12 @@ import { db } from "../../../lib/firebase";
 // 🔥 TICKET 14
 import { createPulseLogger } from "../../../lib/loggerPresets";
 import { recordAuditTrail } from "../../../lib/auditTracer";
+import {
+  validateTenantReadiness,
+  TENANT_ACTIVATION_STATUS,
+  ACTIVATION_CHECKLIST_ITEMS,
+} from "../../../lib/onboardingContract";
+
 const pulseLogger = createPulseLogger("ClientManagement");
 
 const INDUSTRY_OPTIONS = [
@@ -18,6 +24,16 @@ const INDUSTRY_OPTIONS = [
   { label: "Electrical Contracting", value: "Electrical", pack: "electrical_v2" },
   { label: "Pest Control", value: "Pest Control", pack: "pest_v2" },
   { label: "General Home Services", value: "General", pack: "general_v2" },
+];
+
+const CHECKLIST_METADATA = [
+  { key: ACTIVATION_CHECKLIST_ITEMS.ALLOWED_DOMAINS, label: "Domains", icon: "🌐" },
+  { key: ACTIVATION_CHECKLIST_ITEMS.TENANT_MAPPING, label: "Slug", icon: "🏷️" },
+  { key: ACTIVATION_CHECKLIST_ITEMS.SERVICES_AREAS, label: "Services & Areas", icon: "🛠️" },
+  { key: ACTIVATION_CHECKLIST_ITEMS.TIMEZONE_HOURS, label: "Hours", icon: "🕒" },
+  { key: ACTIVATION_CHECKLIST_ITEMS.APPROVED_POLICIES, label: "Policies", icon: "📜" },
+  { key: ACTIVATION_CHECKLIST_ITEMS.SUPPORTED_MODES, label: "Modes", icon: "💬" },
+  { key: ACTIVATION_CHECKLIST_ITEMS.RECIPIENTS_LIMITS, label: "Alerts", icon: "🔔" },
 ];
 
 const INITIAL_NEW_CLIENT = {
@@ -43,6 +59,7 @@ export default function ClientManagement() {
   // --- MODAL STATES ---
   const [viewingProfile, setViewingProfile] = useState(null);
   const [managingUsers, setManagingUsers] = useState(null);
+  const [viewingChecklist, setViewingChecklist] = useState(null);
 
   // --- ADD CLIENT STATES ---
   const [isAddingClient, setIsAddingClient] = useState(false);
@@ -97,6 +114,13 @@ export default function ClientManagement() {
       const loadedClients = [
         {
           id: "primary_client",
+          enabled: true,
+          readiness: validateTenantReadiness({
+            id: "primary_client",
+            business_profile: { basic_info: profileData, timezone: profileData.timezone || "America/New_York" },
+            config: { allowed_origins: ["https://app.closedesk.ai"] },
+            notification_settings: { adminEmail: profileData.email || "admin@closedesk.ai" },
+          }),
           profile: profileData,
           users: usersData,
           isPrimary: true,
@@ -115,6 +139,8 @@ export default function ClientManagement() {
             const tUsers = tData.users
               ? Object.values(tData.users).filter(Boolean)
               : [];
+            const tDataWithId = { id: tId, ...tData };
+            const readiness = validateTenantReadiness(tDataWithId);
             loadedClients.push({
               id: tId,
               profile: {
@@ -137,6 +163,9 @@ export default function ClientManagement() {
               users: tUsers,
               config: tData.config || {},
               isMultiTenant: true,
+              enabled: Boolean(tData.enabled === true && readiness.ready),
+              activation_status: tData.activation_status || readiness.status,
+              readiness,
             });
           }
         }
@@ -621,6 +650,55 @@ export default function ClientManagement() {
     setRevealedPasswords(new Set());
   };
 
+  const handleToggleActivation = async (client) => {
+    if (!client.readiness?.ready) {
+      setViewingChecklist(client);
+      return;
+    }
+
+    const nextState = !client.enabled;
+    setActionLoading(true);
+    try {
+      const token = localStorage.getItem("cd_session_token");
+      const res = await fetch("/api/superadmin/tenants", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "x-requested-with": "XMLHttpRequest",
+          ...(token ? { "x-cd-session": token } : {}),
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          tenantId: client.id,
+          updates: {
+            enabled: nextState,
+            activation_status: nextState ? TENANT_ACTIVATION_STATUS.ACTIVE : TENANT_ACTIVATION_STATUS.PENDING_SETUP,
+          },
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to update tenant activation state");
+      }
+
+      setClients((prev) =>
+        prev.map((c) => (c.id === client.id ? { ...c, enabled: nextState } : c))
+      );
+
+      recordAuditTrail(pulseLogger, "tenant_activation_toggled", {
+        who: localStorage.getItem("currentSuperAdmin") || "superadmin",
+        tenant_id: client.id,
+        enabled: nextState,
+        status: "success",
+      });
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const copyToClipboard = (text, label) => {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(text);
@@ -703,10 +781,22 @@ export default function ClientManagement() {
                     {client.profile.businessName || "Unnamed Business"}
                   </h3>
                   <div className="flex items-center gap-2 text-[var(--foreground-muted)] text-xs font-medium mt-1">
-                    <span className="flex items-center gap-1 font-semibold text-emerald-500">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                      Active
-                    </span>
+                    {client.enabled ? (
+                      <span className="flex items-center gap-1.5 font-bold text-xs text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Active
+                      </span>
+                    ) : client.readiness?.status === TENANT_ACTIVATION_STATUS.RESTRICTED ? (
+                      <span className="flex items-center gap-1.5 font-bold text-xs text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                        <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                        Restricted ({client.readiness?.passedCount || 0}/7)
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1.5 font-bold text-xs text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">
+                        <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                        Pending Setup ({client.readiness?.passedCount || 0}/7)
+                      </span>
+                    )}
                     <span>•</span>
                     <span className="px-2 py-0.5 rounded-md bg-[var(--background)] border border-[var(--border-color)] font-mono text-[10px]">
                       {client.id}
@@ -721,7 +811,7 @@ export default function ClientManagement() {
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-[var(--background)] rounded-xl border border-[var(--border-color)]">
+            <div className="grid grid-cols-2 gap-4 mb-4 p-4 bg-[var(--background)] rounded-xl border border-[var(--border-color)]">
               <div>
                 <p className="text-[10px] uppercase font-bold text-[var(--foreground-muted)] tracking-wider">
                   Email
@@ -740,19 +830,85 @@ export default function ClientManagement() {
               </div>
             </div>
 
-            <div className="mt-auto flex gap-3">
+            {/* 7-Item Operational Readiness Pills */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--foreground-muted)]">
+                  Activation Readiness
+                </span>
+                <span className="text-[10px] font-mono font-bold text-[var(--foreground)]">
+                  {client.readiness?.passedCount || 0}/7 items ({client.readiness?.score || 0}%)
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {CHECKLIST_METADATA.map((meta) => {
+                  const item = client.readiness?.checklist?.[meta.key];
+                  const passed = Boolean(item?.passed);
+                  return (
+                    <span
+                      key={meta.key}
+                      title={`${meta.label}: ${passed ? "Ready" : "Incomplete"}`}
+                      className={`text-[10px] font-medium px-2 py-0.5 rounded-md border flex items-center gap-1 transition-colors ${
+                        passed
+                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/25"
+                          : "bg-neutral-800/60 text-neutral-400 border-neutral-700/60"
+                      }`}
+                    >
+                      <span>{meta.icon}</span>
+                      <span>{meta.label}</span>
+                      <span className="font-bold">{passed ? "✓" : "✗"}</span>
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="mt-auto pt-3 border-t border-[var(--border-color)] flex flex-wrap gap-2">
               <button
                 onClick={() => setViewingProfile(client)}
-                className="flex-1 py-2.5 rounded-xl border border-[var(--border-color)] text-[var(--foreground)] text-sm font-bold hover:bg-[var(--background)] hover:border-[var(--primary)] transition-all"
+                className="flex-1 min-w-[70px] py-2 rounded-xl border border-[var(--border-color)] text-[var(--foreground)] text-xs font-bold hover:bg-[var(--background)] hover:border-[var(--primary)] transition-all"
               >
-                View Profile
+                Profile
               </button>
               <button
                 onClick={() => setManagingUsers({ client, cIdx })}
-                className="flex-1 py-2.5 rounded-xl bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/20 text-sm font-bold hover:bg-[var(--primary)] hover:text-white transition-all"
+                className="flex-1 min-w-[70px] py-2 rounded-xl bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/20 text-xs font-bold hover:bg-[var(--primary)] hover:text-white transition-all"
               >
-                Manage Users
+                Users ({client.users.length})
               </button>
+              <button
+                onClick={() => setViewingChecklist(client)}
+                className="py-2 px-3 rounded-xl border border-[var(--border-color)] bg-[var(--background)] text-[var(--foreground)] text-xs font-bold hover:border-amber-500/50 transition-all flex items-center gap-1.5"
+              >
+                <span>Checklist</span>
+                <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                  client.readiness?.ready ? "bg-emerald-500/20 text-emerald-400" : "bg-amber-500/20 text-amber-400"
+                }`}>
+                  {client.readiness?.passedCount || 0}/7
+                </span>
+              </button>
+              {client.id !== "primary_client" && (
+                <button
+                  onClick={() => handleToggleActivation(client)}
+                  disabled={actionLoading}
+                  title={
+                    !client.enabled && !client.readiness?.ready
+                      ? "Cannot activate: Operational readiness checklist incomplete (all 7 required)"
+                      : client.enabled
+                      ? "Deactivate tenant"
+                      : "Activate tenant"
+                  }
+                  className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
+                    client.enabled
+                      ? "border-rose-500/30 text-rose-400 bg-rose-500/10 hover:bg-rose-500 hover:text-white"
+                      : client.readiness?.ready
+                      ? "border-emerald-500/40 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500 hover:text-white"
+                      : "border-neutral-700 text-neutral-500 bg-neutral-800/40 cursor-not-allowed opacity-60"
+                  }`}
+                >
+                  {client.enabled ? "Deactivate" : "Activate"}
+                </button>
+              )}
             </div>
           </div>
         ))}
@@ -1583,6 +1739,173 @@ export default function ClientManagement() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* 🚀 MODAL: OPERATIONAL ACTIVATION CHECKLIST (CD11)        */}
+      {/* ======================================================== */}
+      {viewingChecklist && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => setViewingChecklist(null)}
+          />
+          <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-3xl p-6 sm:p-8 max-w-2xl w-full relative z-50 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar flex flex-col">
+            <div className="flex justify-between items-start mb-6 border-b border-[var(--border-color)] pb-4">
+              <div>
+                <div className="flex items-center gap-3">
+                  <h3 className="text-xl font-black text-[var(--foreground)]">
+                    Operational Readiness Checklist
+                  </h3>
+                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                    viewingChecklist.readiness?.ready
+                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                      : viewingChecklist.readiness?.status === TENANT_ACTIVATION_STATUS.RESTRICTED
+                      ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                      : "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                  }`}>
+                    {viewingChecklist.readiness?.status?.toUpperCase()}
+                  </span>
+                </div>
+                <p className="text-xs text-[var(--foreground-muted)] mt-1">
+                  Tenant: <span className="font-mono text-[var(--foreground)] font-bold">{viewingChecklist.id}</span> ({viewingChecklist.profile?.businessName || "Unnamed"})
+                </p>
+              </div>
+              <button
+                onClick={() => setViewingChecklist(null)}
+                className="p-2 text-[var(--foreground-muted)] hover:text-[var(--foreground)] rounded-lg hover:bg-[var(--background)] transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Progress Bar & Summary */}
+            <div className="mb-6 p-4 bg-[var(--background)] border border-[var(--border-color)] rounded-2xl">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-[var(--foreground-muted)]">
+                  Activation Readiness Score
+                </span>
+                <span className="text-sm font-black font-mono text-[var(--foreground)]">
+                  {viewingChecklist.readiness?.passedCount || 0} / 7 items ({viewingChecklist.readiness?.score || 0}%)
+                </span>
+              </div>
+              <div className="w-full h-3 bg-neutral-800 rounded-full overflow-hidden">
+                <div
+                  className={`h-full transition-all duration-500 ${
+                    viewingChecklist.readiness?.ready
+                      ? "bg-emerald-500"
+                      : viewingChecklist.readiness?.passedCount >= 4
+                      ? "bg-amber-500"
+                      : "bg-rose-500"
+                  }`}
+                  style={{ width: `${viewingChecklist.readiness?.score || 0}%` }}
+                />
+              </div>
+              <p className="text-xs text-[var(--foreground-muted)] mt-2">
+                {viewingChecklist.readiness?.ready
+                  ? "✅ All 7 operational criteria satisfied. This tenant is fully eligible for production activation."
+                  : "⚠️ Tenant activation is strictly gated. All 7 items must pass before this partition can serve live traffic."}
+              </p>
+            </div>
+
+            {/* 7 Items List */}
+            <div className="space-y-3 mb-6">
+              {CHECKLIST_METADATA.map((meta, index) => {
+                const itemKey = meta.key;
+                const itemResult = viewingChecklist.readiness?.checklist?.[itemKey] || {};
+                const isPassed = Boolean(itemResult.passed);
+
+                return (
+                  <div
+                    key={itemKey}
+                    className={`p-4 rounded-xl border transition-all ${
+                      isPassed
+                        ? "bg-emerald-500/5 border-emerald-500/20"
+                        : "bg-rose-500/5 border-rose-500/20"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">{meta.icon}</span>
+                        <span className="text-sm font-bold text-[var(--foreground)]">
+                          {index + 1}. {meta.label}
+                        </span>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${
+                        isPassed
+                          ? "bg-emerald-500/20 text-emerald-400"
+                          : "bg-rose-500/20 text-rose-400"
+                      }`}>
+                        {isPassed ? "Passed" : "Incomplete"}
+                      </span>
+                    </div>
+
+                    {/* Item Details */}
+                    <div className="mt-2 text-xs text-[var(--foreground-muted)]">
+                      {itemResult.details && typeof itemResult.details === "object" ? (
+                        <pre className="font-mono text-[11px] bg-[var(--background)] p-2 rounded-lg overflow-x-auto text-[var(--foreground)]">
+                          {JSON.stringify(itemResult.details, null, 2)}
+                        </pre>
+                      ) : (
+                        <p className="font-mono text-[11px] bg-[var(--background)] p-2 rounded-lg text-[var(--foreground)]">
+                          {String(itemResult.details || "None configured")}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Missing Items Summary if Any */}
+            {viewingChecklist.readiness?.missing?.length > 0 && (
+              <div className="p-4 mb-6 bg-amber-500/10 border border-amber-500/30 rounded-2xl">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400 mb-2">
+                  Action Items Required for Activation ({viewingChecklist.readiness.missing.length})
+                </h4>
+                <ul className="space-y-1.5 text-xs text-[var(--foreground)]">
+                  {viewingChecklist.readiness.missing.map((req, rIdx) => (
+                    <li key={rIdx} className="flex items-start gap-2">
+                      <span className="text-amber-400">•</span>
+                      <span>{req}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Modal Actions */}
+            <div className="mt-auto flex justify-end gap-3 pt-4 border-t border-[var(--border-color)]">
+              <button
+                onClick={() => setViewingChecklist(null)}
+                className="px-5 py-2.5 rounded-xl border border-[var(--border-color)] text-[var(--foreground)] text-xs font-bold hover:bg-[var(--background)] transition-all"
+              >
+                Close
+              </button>
+              {viewingChecklist.id !== "primary_client" && (
+                <button
+                  onClick={() => {
+                    const target = viewingChecklist;
+                    setViewingChecklist(null);
+                    handleToggleActivation(target);
+                  }}
+                  disabled={!viewingChecklist.readiness?.ready || actionLoading}
+                  className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                    viewingChecklist.enabled
+                      ? "bg-rose-500 text-white hover:bg-rose-600"
+                      : viewingChecklist.readiness?.ready
+                      ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                      : "bg-neutral-800 text-neutral-500 cursor-not-allowed"
+                  }`}
+                >
+                  {viewingChecklist.enabled ? "Deactivate Tenant" : "Activate Tenant"}
+                </button>
+              )}
             </div>
           </div>
         </div>

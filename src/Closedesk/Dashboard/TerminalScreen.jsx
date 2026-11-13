@@ -6,6 +6,44 @@ import { createPulseLogger } from "../../lib/loggerPresets";
 import { recordAuditTrail } from "../../lib/auditTracer";
 
 const pulseLogger = createPulseLogger("TerminalScreen");
+const getStatusBadge = (lead) => {
+  const status = (lead.lifecycle_status || lead.booking_status || "").toUpperCase();
+  if (status.includes("PENDING")) {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 border border-amber-500/30 text-amber-500">
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+        Pending
+      </span>
+    );
+  }
+  if (status.includes("UNKNOWN")) {
+    return (
+      <span className="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-orange-500/10 border border-orange-500/30 text-orange-400">
+        Unknown
+      </span>
+    );
+  }
+  if (status.includes("ABANDON")) {
+    return (
+      <span className="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-rose-500/10 border border-rose-500/30 text-rose-400">
+        Abandoned
+      </span>
+    );
+  }
+  if (lead.booking_status === "Meeting Booked" || lead.booked_slot || lead.selected_date || status === "BOOKED") {
+    return (
+      <span className="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-[var(--lead-glow)] border border-[var(--primary)]/30 text-[var(--primary)]">
+        Booked
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-[var(--foreground-muted)]/10 border border-[var(--border-color)] text-[var(--foreground-muted)] group-hover:border-[var(--foreground-muted)] transition-colors">
+      Captured
+    </span>
+  );
+};
+
 
 export default function LeadScreen({ onLogout }) {
   const [leads, setLeads] = useState([]);
@@ -298,9 +336,7 @@ export default function LeadScreen({ onLogout }) {
                     <div className="text-[var(--foreground-muted)] text-[11px] truncate max-w-[180px] mt-0.5">{lead.location ? `${lead.location} • ` : ""}{lead.visitor_intent || "N/A"}</div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex items-center px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${lead.booking_status === "Meeting Booked" || lead.booked_slot || lead.selected_date ? "bg-[var(--lead-glow)] border border-[var(--primary)]/30 text-[var(--primary)]" : "bg-[var(--foreground-muted)]/10 border border-[var(--border-color)] text-[var(--foreground-muted)] group-hover:border-[var(--foreground-muted)] transition-colors"}`}>
-                      {lead.booking_status === "Meeting Booked" || lead.booked_slot || lead.selected_date ? "Booked" : "Captured"}
-                    </span>
+                    {getStatusBadge(lead)}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
@@ -342,8 +378,16 @@ export default function LeadScreen({ onLogout }) {
                 <div className="relative z-10 flex justify-between items-start">
                   <div>
                     <div className="flex items-center gap-3 mb-2">
-                      <span className={`px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-widest ${selectedLead.booking_status === "Meeting Booked" || selectedLead.booked_slot || selectedLead.selected_date ? "bg-[var(--primary)] text-[var(--background)] shadow-[0_0_10px_var(--lead-glow)]" : "bg-[var(--foreground-muted)]/20 text-[var(--foreground-muted)] border border-[var(--border-color)]"}`}>
-                        {selectedLead.booking_status || "Captured"}
+                      <span className={`px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-widest ${
+                        selectedLead.booking_status === "Meeting Booked" || selectedLead.booked_slot || selectedLead.selected_date
+                          ? "bg-[var(--primary)] text-[var(--background)] shadow-[0_0_10px_var(--lead-glow)]"
+                          : selectedLead.booking_status?.toUpperCase().includes("PENDING")
+                          ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                          : selectedLead.booking_status?.toUpperCase().includes("UNKNOWN")
+                          ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
+                          : "bg-[var(--foreground-muted)]/20 text-[var(--foreground-muted)] border border-[var(--border-color)]"
+                      }`}>
+                        {selectedLead.lifecycle_status || selectedLead.booking_status || "Captured"}
                       </span>
                       <span className="text-[var(--foreground-muted)] font-mono text-[10px] tracking-wider">REF: {selectedLead.id}</span>
                     </div>

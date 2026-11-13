@@ -34,6 +34,10 @@
       "log_retention": {
         ".read": "auth != null && auth.token.role === 'superadmin'",
         ".write": "auth != null && auth.token.role === 'superadmin'"
+      },
+      "global_voice": {
+        ".read": true,
+        ".write": "auth != null && auth.token.role === 'superadmin'"
       }
     },
     "tenants": {
@@ -63,17 +67,51 @@
         },
         "leads": {
           ".read": "auth != null && (auth.token.role === 'superadmin' || auth.token.tenant_id === $tenant_id)",
-          ".write": true,
+          ".write": "auth != null && (auth.token.role === 'superadmin' || auth.token.tenant_id === $tenant_id)",
           ".indexOn": ["timestamp", "booking_status", "urgency_level"]
         },
         "user_cookies": {
           ".read": "auth != null && (auth.token.role === 'superadmin' || auth.token.tenant_id === $tenant_id)",
-          ".write": true,
+          ".write": "auth != null && (auth.token.role === 'superadmin' || auth.token.tenant_id === $tenant_id)",
           ".indexOn": ["updatedAt", "isArchived", "anonId"]
         },
         "email_config": {
           ".read": "auth != null && auth.token.role === 'superadmin'",
           ".write": "auth != null && auth.token.role === 'superadmin'"
+        },
+        "idempotency_locks": {
+          ".read": "auth != null && (auth.token.role === 'superadmin' || auth.token.tenant_id === $tenant_id)",
+          ".write": "auth != null && (auth.token.role === 'superadmin' || auth.token.tenant_id === $tenant_id)"
+        },
+        "voice_nonces": {
+          ".read": "auth != null && (auth.token.role === 'superadmin' || auth.token.tenant_id === $tenant_id)",
+          ".write": "auth != null && (auth.token.role === 'superadmin' || auth.token.tenant_id === $tenant_id)"
+        },
+        "voice_sessions": {
+          ".read": "auth != null && (auth.token.role === 'superadmin' || auth.token.tenant_id === $tenant_id)",
+          ".write": "auth != null && (auth.token.role === 'superadmin' || auth.token.tenant_id === $tenant_id)",
+          ".indexOn": ["status", "started_at", "last_heartbeat_at"]
+        },
+        "prospects": {
+          ".read": "auth != null && (auth.token.role === 'superadmin' || auth.token.tenant_id === $tenant_id)",
+          ".write": "auth != null && (auth.token.role === 'superadmin' || auth.token.tenant_id === $tenant_id)"
+        },
+        "notification_jobs": {
+          ".read": "auth != null && (auth.token.role === 'superadmin' || auth.token.tenant_id === $tenant_id)",
+          ".write": "auth != null && (auth.token.role === 'superadmin' || auth.token.tenant_id === $tenant_id)",
+          ".indexOn": ["created_at", "delivery_status", "acknowledgement_status"]
+        },
+        "notification_settings": {
+          ".read": "auth != null && (auth.token.role === 'superadmin' || auth.token.tenant_id === $tenant_id)",
+          ".write": "auth != null && (auth.token.role === 'superadmin' || auth.token.tenant_id === $tenant_id)"
+        },
+        "delivery_attempts": {
+          ".read": "auth != null && (auth.token.role === 'superadmin' || auth.token.tenant_id === $tenant_id)",
+          ".write": "auth != null && (auth.token.role === 'superadmin' || auth.token.tenant_id === $tenant_id)"
+        },
+        "notifications": {
+          ".read": "auth != null && (auth.token.role === 'superadmin' || auth.token.tenant_id === $tenant_id)",
+          ".write": "auth != null && (auth.token.role === 'superadmin' || auth.token.tenant_id === $tenant_id)"
         },
         "secrets": {
           ".read": false,
@@ -87,33 +125,61 @@
     },
     "leads": {
       ".read": "auth != null && auth.token.role === 'superadmin'",
-      ".write": true,
+      ".write": "auth != null && auth.token.role === 'superadmin'",
       ".indexOn": ["timestamp", "booking_status", "urgency_level", "tenant_id"]
     },
     "user_cookies": {
       ".read": "auth != null && auth.token.role === 'superadmin'",
-      ".write": true,
+      ".write": "auth != null && auth.token.role === 'superadmin'",
       ".indexOn": ["updatedAt", "isArchived", "anonId", "tenant_id"]
     },
     "system_logs": {
       "structured_events": {
         ".read": "auth != null && auth.token.role === 'superadmin'",
-        ".write": true,
+        ".write": "auth != null && auth.token.role === 'superadmin'",
         ".indexOn": ["timestamp", "service", "level", "tenant_id"]
       },
       "activity_events": {
         ".read": "auth != null && auth.token.role === 'superadmin'",
-        ".write": true,
+        ".write": "auth != null && auth.token.role === 'superadmin'",
         ".indexOn": ["timestamp"]
       }
     },
     "email_alerts": {
       ".read": "auth != null && auth.token.role === 'superadmin'",
-      ".write": true
+      ".write": "auth != null && auth.token.role === 'superadmin'"
     },
     "scheduled_reminders": {
       ".read": "auth != null && auth.token.role === 'superadmin'",
-      ".write": true
+      ".write": "auth != null && auth.token.role === 'superadmin'"
+    },
+    "idempotency_locks": {
+      ".read": "auth != null && auth.token.role === 'superadmin'",
+      ".write": "auth != null && auth.token.role === 'superadmin'"
+    },
+    "voice_nonces": {
+      ".read": "auth != null && auth.token.role === 'superadmin'",
+      ".write": "auth != null && auth.token.role === 'superadmin'"
+    },
+    "prospects": {
+      ".read": "auth != null && auth.token.role === 'superadmin'",
+      ".write": "auth != null && auth.token.role === 'superadmin'"
+    },
+    "notification_jobs": {
+      ".read": "auth != null && auth.token.role === 'superadmin'",
+      ".write": "auth != null && auth.token.role === 'superadmin'"
+    },
+    "delivery_attempts": {
+      ".read": "auth != null && auth.token.role === 'superadmin'",
+      ".write": "auth != null && auth.token.role === 'superadmin'"
+    },
+    "notifications": {
+      ".read": "auth != null && auth.token.role === 'superadmin'",
+      ".write": "auth != null && auth.token.role === 'superadmin'"
+    },
+    "voice_sessions": {
+      ".read": "auth != null && auth.token.role === 'superadmin'",
+      ".write": "auth != null && auth.token.role === 'superadmin'"
     }
   }
 }

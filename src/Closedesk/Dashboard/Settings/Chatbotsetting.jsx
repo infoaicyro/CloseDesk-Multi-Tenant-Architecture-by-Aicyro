@@ -105,10 +105,23 @@ export default function ChatbotSettings({ onNavigate }) {
     );
   };
 
+  const [tenantId, setTenantId] = useState("default");
+
   useEffect(() => {
+    const activeTenant = typeof window !== "undefined"
+      ? (localStorage.getItem("currentTenant") || "default")
+      : "default";
+    setTenantId(activeTenant);
+    const configPath = activeTenant && activeTenant !== "default"
+      ? `tenants/${activeTenant}/chatbot_config`
+      : "settings/chatbot_config";
+
     const fetchConfig = async () => {
       try {
-        const snapshot = await get(ref(db, "settings/chatbot_config"));
+        let snapshot = await get(ref(db, configPath));
+        if (!snapshot.exists() && activeTenant !== "default") {
+          snapshot = await get(ref(db, "settings/chatbot_config"));
+        }
         if (snapshot.exists()) {
           const data = snapshot.val();
           const voiceVal = data.voiceChatAgent !== undefined ? data.voiceChatAgent : (data.voiceEnabled !== undefined ? data.voiceEnabled : true);
@@ -277,8 +290,15 @@ export default function ChatbotSettings({ onNavigate }) {
       }
     });
 
+    const activeTenant = typeof window !== "undefined"
+      ? (localStorage.getItem("currentTenant") || "default")
+      : "default";
+    const configPath = activeTenant && activeTenant !== "default"
+      ? `tenants/${activeTenant}/chatbot_config`
+      : "settings/chatbot_config";
+
     try {
-      await set(ref(db, "settings/chatbot_config"), {
+      await set(ref(db, configPath), {
         ...cleanedConfig,
         updated_at: new Date().toISOString(),
       });
@@ -286,7 +306,7 @@ export default function ChatbotSettings({ onNavigate }) {
       // 🚨 TICKET 14: Log Configuration Change with Previous and New state
       recordAuditTrail(pulseLogger, "configuration_changed", {
         who: localStorage.getItem("currentSuperAdmin") || localStorage.getItem("currentUser") || "unknown",
-        target: "settings/chatbot_config",
+        target: configPath,
         previousState: config, 
         newState: cleanedConfig 
       });

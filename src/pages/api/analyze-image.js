@@ -5,7 +5,7 @@ import { ref, update, get } from "firebase/database";
 import { withApiLogger } from "../../lib/apiMiddleware";
 import { createAiLogger } from "../../lib/loggerPresets";
 import { getVisionSystemPrompt, VISION_DEFAULT_MODEL, VISION_POLICY_VERSION } from "../../lib/visionRuleBook";
-import { resolveTenantId } from "../../lib/tenantResolver";
+import { resolveTenantId, sanitizeTenantId } from "../../lib/tenantResolver";
 import { traceAiExecution } from "../../lib/aiTracer";
 import {
   validateRequestBodySize,
@@ -140,11 +140,17 @@ async function handler(req, res) {
       });
     }
 
-    // Only save valid business problems to Firebase
+    // 🚨 CD08: Bounded intake guarantee — image analysis cannot confirm diagnoses
+    parsedResult.is_diagnosis_confirmed = false;
+    parsedResult.requires_physical_inspection = true;
+
+    // Save bounded visual intake record to Firebase
     const imagePayload = {
       image_url,
-      identified_issue: parsedResult.identified_issue || "Defect inspected",
+      identified_issue: parsedResult.identified_issue || "Visible condition observed",
       urgency_level: parsedResult.urgency_level || "Medium",
+      is_diagnosis_confirmed: false,
+      requires_physical_inspection: true,
       model_used: VISION_DEFAULT_MODEL,
       vision_policy_version: VISION_POLICY_VERSION,
       analyzed_at: new Date().toISOString()
@@ -152,10 +158,17 @@ async function handler(req, res) {
 
     await update(ref(db, `prospects/${session_id}/last_vision_inspection`), imagePayload);
 
-    await update(ref(db, `leads/${session_id}`), {
+    const resolvedTenant = sanitizeTenantId(resolveTenantId(req) || prospectData.tenant_id || "default");
+    const targetLeadPath = resolvedTenant && resolvedTenant !== "default"
+      ? `tenants/${resolvedTenant}/leads/${session_id}`
+      : `leads/${session_id}`;
+
+    await update(ref(db, targetLeadPath), {
       last_inspected_image: image_url,
       identified_issue: parsedResult.identified_issue || "",
-      urgency_level: parsedResult.urgency_level || "Medium"
+      urgency_level: parsedResult.urgency_level || "Medium",
+      is_diagnosis_confirmed: false,
+      requires_physical_inspection: true,
     }).catch(() => {});
 
     aiLogger.info("ai_vision", "image_analysis_success", {

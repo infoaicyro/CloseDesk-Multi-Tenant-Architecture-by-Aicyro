@@ -1,7 +1,7 @@
 {
   "ticket": "CD04",
   "title": "OAuth Account Linking and Provider Security Evidence",
-  "timestamp": "2026-11-03T18:10:31.651Z",
+  "timestamp": "2026-11-06T13:01:03.758Z",
   "summary": {
     "total_tests": 25,
     "passed": 25,
@@ -23,27 +23,27 @@
       "test_id": "AC1.1",
       "name": "State token cryptographically binds operator, tenantId, provider, nonce, and expiration",
       "status": "PASS",
-      "details": "State verified: sub=superadmin_alice, tenant=tenant_alpha, nonce=f94bfffb266770c5fda69221b66f33d1",
+      "details": "State verified: sub=superadmin_alice, tenant=tenant_alpha, nonce=bd78831ce83b4e302b3b6630fad877d6",
       "evidence": {
         "sub": "superadmin_alice",
         "tenantId": "tenant_alpha",
         "provider": "google",
         "redirectUri": "http://localhost:3000/api/auth/google/callback",
-        "nonce": "f94bfffb266770c5fda69221b66f33d1",
-        "iat": 1793729431,
-        "exp": 1793730031
+        "nonce": "bd78831ce83b4e302b3b6630fad877d6",
+        "iat": 1793970062,
+        "exp": 1793970662
       },
-      "timestamp": "2026-11-03T18:10:31.130Z"
+      "timestamp": "2026-11-06T13:01:02.580Z"
     },
     {
       "test_id": "AC1.2",
       "name": "Callback rejects request with absent state parameter (400 Bad Request)",
       "status": "PASS",
-      "details": "Expected status 400 with missing state error, got 400",
+      "details": "Expected status 400 with missing state error, got 403",
       "evidence": {
-        "statusCode": 400
+        "statusCode": 403
       },
-      "timestamp": "2026-11-03T18:10:31.131Z"
+      "timestamp": "2026-11-06T13:01:02.581Z"
     },
     {
       "test_id": "AC1.3",
@@ -53,7 +53,7 @@
       "evidence": {
         "error": "Invalid OAuth state cryptographic signature (tampering detected)"
       },
-      "timestamp": "2026-11-03T18:10:31.131Z"
+      "timestamp": "2026-11-06T13:01:02.581Z"
     },
     {
       "test_id": "AC1.4",
@@ -63,7 +63,7 @@
       "evidence": {
         "error": "OAuth state token has expired (replay window closed)"
       },
-      "timestamp": "2026-11-03T18:10:31.131Z"
+      "timestamp": "2026-11-06T13:01:02.581Z"
     },
     {
       "test_id": "AC1.5",
@@ -74,7 +74,7 @@
         "firstValid": true,
         "secondError": "OAuth state token has already been consumed (replay attack rejected)"
       },
-      "timestamp": "2026-11-03T18:10:31.132Z"
+      "timestamp": "2026-11-06T13:01:02.582Z"
     },
     {
       "test_id": "AC1.6",
@@ -84,7 +84,7 @@
       "evidence": {
         "error": "OAuth state provider mismatch (bound to 'google', expected 'microsoft')"
       },
-      "timestamp": "2026-11-03T18:10:31.132Z"
+      "timestamp": "2026-11-06T13:01:02.582Z"
     },
     {
       "test_id": "AC2.1",
@@ -95,7 +95,7 @@
         "scopes": "openid https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/gmail.send",
         "hasFullMailbox": false
       },
-      "timestamp": "2026-11-03T18:10:31.132Z"
+      "timestamp": "2026-11-06T13:01:02.582Z"
     },
     {
       "test_id": "AC2.2",
@@ -106,7 +106,7 @@
         "scopes": "openid email offline_access https://outlook.office.com/SMTP.Send",
         "hasFullMailbox": false
       },
-      "timestamp": "2026-11-03T18:10:31.132Z"
+      "timestamp": "2026-11-06T13:01:02.582Z"
     },
     {
       "test_id": "AC2.3",
@@ -121,7 +121,7 @@
           "status": "disabled"
         }
       },
-      "timestamp": "2026-11-03T18:10:31.133Z"
+      "timestamp": "2026-11-06T13:01:03.195Z"
     },
     {
       "test_id": "AC2.4",
@@ -131,7 +131,7 @@
       "evidence": {
         "method": "S256"
       },
-      "timestamp": "2026-11-03T18:10:31.133Z"
+      "timestamp": "2026-11-06T13:01:03.196Z"
     },
     {
       "test_id": "AC3.1",
@@ -141,17 +141,17 @@
       "evidence": {
         "email": "operator@verified-domain.com"
       },
-      "timestamp": "2026-11-03T18:10:31.133Z"
+      "timestamp": "2026-11-06T13:01:03.198Z"
     },
     {
       "test_id": "AC3.2",
       "name": "Expired ID token rejected ('exp' claim validation)",
       "status": "PASS",
-      "details": "Result: valid=false, error=ID token expired at 2026-11-03T18:00:31.000Z",
+      "details": "Result: valid=false, error=ID token expired at 2026-11-06T12:51:03.000Z",
       "evidence": {
-        "error": "ID token expired at 2026-11-03T18:00:31.000Z"
+        "error": "ID token expired at 2026-11-06T12:51:03.000Z"
       },
-      "timestamp": "2026-11-03T18:10:31.133Z"
+      "timestamp": "2026-11-06T13:01:03.198Z"
     },
     {
       "test_id": "AC3.3",
@@ -161,7 +161,7 @@
       "evidence": {
         "error": "ID token audience mismatch: expected 'test_google_client_id_789.apps.googleusercontent.com', got '\"different_malicious_client_id\"'"
       },
-      "timestamp": "2026-11-03T18:10:31.133Z"
+      "timestamp": "2026-11-06T13:01:03.198Z"
     },
     {
       "test_id": "AC3.4",
@@ -171,7 +171,7 @@
       "evidence": {
         "error": "Invalid Google ID token issuer: 'https://evil-untrusted-issuer.com'"
       },
-      "timestamp": "2026-11-03T18:10:31.133Z"
+      "timestamp": "2026-11-06T13:01:03.198Z"
     },
     {
       "test_id": "AC3.5",
@@ -181,7 +181,7 @@
       "evidence": {
         "error": "ID token nonce mismatch: expected 'nonce_random_canary_4455', got 'attacker_forged_nonce'"
       },
-      "timestamp": "2026-11-03T18:10:31.133Z"
+      "timestamp": "2026-11-06T13:01:03.199Z"
     },
     {
       "test_id": "AC3.6",
@@ -191,7 +191,7 @@
       "evidence": {
         "error": "Insecure JWT algorithm: 'none' is disallowed"
       },
-      "timestamp": "2026-11-03T18:10:31.133Z"
+      "timestamp": "2026-11-06T13:01:03.199Z"
     },
     {
       "test_id": "AC4.1",
@@ -202,7 +202,7 @@
         "hasExactOrigin": true,
         "hasWildcardOrigin": false
       },
-      "timestamp": "2026-11-03T18:10:31.133Z"
+      "timestamp": "2026-11-06T13:01:03.199Z"
     },
     {
       "test_id": "AC4.2",
@@ -214,7 +214,7 @@
         "hasRefreshToken": false,
         "hasAccessToken": false
       },
-      "timestamp": "2026-11-03T18:10:31.133Z"
+      "timestamp": "2026-11-06T13:01:03.199Z"
     },
     {
       "test_id": "AC4.3",
@@ -226,7 +226,7 @@
         "hasSourceCheck": true,
         "hasSchemaCheck": true
       },
-      "timestamp": "2026-11-03T18:10:31.134Z"
+      "timestamp": "2026-11-06T13:01:03.200Z"
     },
     {
       "test_id": "AC5.1",
@@ -236,7 +236,7 @@
       "evidence": {
         "boundTenant": "tenant_a"
       },
-      "timestamp": "2026-11-03T18:10:31.134Z"
+      "timestamp": "2026-11-06T13:01:03.201Z"
     },
     {
       "test_id": "AC5.2",
@@ -246,7 +246,7 @@
       "evidence": {
         "targetPath": "tenants/tenant_x/email_config"
       },
-      "timestamp": "2026-11-03T18:10:31.134Z"
+      "timestamp": "2026-11-06T13:01:03.202Z"
     },
     {
       "test_id": "AC6.1",
@@ -257,7 +257,7 @@
         "success": false,
         "revoked": false
       },
-      "timestamp": "2026-11-03T18:10:31.650Z"
+      "timestamp": "2026-11-06T13:01:03.757Z"
     },
     {
       "test_id": "AC6.2",
@@ -267,7 +267,7 @@
       "evidence": {
         "hasRevokedCheck": true
       },
-      "timestamp": "2026-11-03T18:10:31.650Z"
+      "timestamp": "2026-11-06T13:01:03.758Z"
     },
     {
       "test_id": "AC6.3",
@@ -277,7 +277,7 @@
       "evidence": {
         "hasDisconnectHandler": true
       },
-      "timestamp": "2026-11-03T18:10:31.651Z"
+      "timestamp": "2026-11-06T13:01:03.758Z"
     },
     {
       "test_id": "AC7.1",
@@ -288,7 +288,7 @@
         "hasGoogleCalendarScope": false,
         "hasMsCalendarScope": false
       },
-      "timestamp": "2026-11-03T18:10:31.651Z"
+      "timestamp": "2026-11-06T13:01:03.758Z"
     }
   ]
 }

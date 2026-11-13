@@ -1,0 +1,189 @@
+{
+  "target": "https://aichatbot-a6217-default-rtdb.firebaseio.com",
+  "timestamp": "2026-11-04T18:22:48.633Z",
+  "total": 18,
+  "passed": 18,
+  "failed": 0,
+  "results": [
+    {
+      "id": "LR1.1",
+      "name": "Root database read (.read: false)",
+      "method": "GET",
+      "path": "/.json",
+      "expectedStatus": 401,
+      "actualStatus": 401,
+      "responseSnippet": "{\n  \"error\" : \"Permission denied\"\n}\n",
+      "status": "PASS"
+    },
+    {
+      "id": "LR1.2",
+      "name": "Root database write (.write: false)",
+      "method": "PUT",
+      "path": "/.json",
+      "expectedStatus": 401,
+      "actualStatus": 401,
+      "responseSnippet": "{\n  \"error\" : \"Permission denied\"\n}\n",
+      "status": "PASS"
+    },
+    {
+      "id": "LR1.3",
+      "name": "Parent /tenants bulk dump read (.read: false)",
+      "method": "GET",
+      "path": "/tenants.json",
+      "expectedStatus": 401,
+      "actualStatus": 401,
+      "responseSnippet": "{\n  \"error\" : \"Permission denied\"\n}\n",
+      "status": "PASS"
+    },
+    {
+      "id": "LR1.4",
+      "name": "Parent /settings bulk dump read (.read: false)",
+      "method": "GET",
+      "path": "/settings.json",
+      "expectedStatus": 401,
+      "actualStatus": 401,
+      "responseSnippet": "{\n  \"error\" : \"Permission denied\"\n}\n",
+      "status": "PASS"
+    },
+    {
+      "id": "LR1.5",
+      "name": "Global settings/email_config read (.read: superadmin only)",
+      "method": "GET",
+      "path": "/settings/email_config.json",
+      "expectedStatus": 401,
+      "actualStatus": 401,
+      "responseSnippet": "{\n  \"error\" : \"Permission denied\"\n}\n",
+      "status": "PASS"
+    },
+    {
+      "id": "LR1.6",
+      "name": "Tenant email_config read (.read: superadmin only)",
+      "method": "GET",
+      "path": "/tenants/tenant_a/email_config.json",
+      "expectedStatus": 401,
+      "actualStatus": 401,
+      "responseSnippet": "{\n  \"error\" : \"Permission denied\"\n}\n",
+      "status": "PASS"
+    },
+    {
+      "id": "LR1.7",
+      "name": "Tenant secrets read (.read: false)",
+      "method": "GET",
+      "path": "/tenants/tenant_a/secrets.json",
+      "expectedStatus": 401,
+      "actualStatus": 401,
+      "responseSnippet": "{\n  \"error\" : \"Permission denied\"\n}\n",
+      "status": "PASS"
+    },
+    {
+      "id": "LR1.8",
+      "name": "system_security read (.read: false)",
+      "method": "GET",
+      "path": "/system_security.json",
+      "expectedStatus": 401,
+      "actualStatus": 401,
+      "responseSnippet": "{\n  \"error\" : \"Permission denied\"\n}\n",
+      "status": "PASS"
+    },
+    {
+      "id": "LR1.9",
+      "name": "Direct unauthenticated write to tenant leads (.write: auth token required)",
+      "method": "POST",
+      "path": "/tenants/tenant_a/leads.json",
+      "expectedStatus": 401,
+      "actualStatus": 401,
+      "responseSnippet": "{\n  \"error\" : \"Permission denied\"\n}\n",
+      "status": "PASS"
+    },
+    {
+      "id": "LR1.10",
+      "name": "Direct unauthenticated write to tenant cookies (.write: auth token required)",
+      "method": "POST",
+      "path": "/tenants/tenant_a/user_cookies.json",
+      "expectedStatus": 401,
+      "actualStatus": 401,
+      "responseSnippet": "{\n  \"error\" : \"Permission denied\"\n}\n",
+      "status": "PASS"
+    },
+    {
+      "id": "LR1.11",
+      "name": "Direct unauthenticated write to global leads (.write: superadmin)",
+      "method": "POST",
+      "path": "/leads.json",
+      "expectedStatus": 401,
+      "actualStatus": 401,
+      "responseSnippet": "{\n  \"error\" : \"Permission denied\"\n}\n",
+      "status": "PASS"
+    },
+    {
+      "id": "LR1.12",
+      "name": "Direct unauthenticated write to email_alerts (.write: superadmin phishing defense)",
+      "method": "POST",
+      "path": "/email_alerts.json",
+      "expectedStatus": 401,
+      "actualStatus": 401,
+      "responseSnippet": "{\n  \"error\" : \"Permission denied\"\n}\n",
+      "status": "PASS"
+    },
+    {
+      "id": "LR1.13",
+      "name": "Direct unauthenticated write to scheduled_reminders (.write: superadmin)",
+      "method": "POST",
+      "path": "/scheduled_reminders.json",
+      "expectedStatus": 401,
+      "actualStatus": 401,
+      "responseSnippet": "{\n  \"error\" : \"Permission denied\"\n}\n",
+      "status": "PASS"
+    },
+    {
+      "id": "LR1.14",
+      "name": "Direct unauthenticated write to system_logs (.write: superadmin)",
+      "method": "POST",
+      "path": "/system_logs/structured_events.json",
+      "expectedStatus": 401,
+      "actualStatus": 401,
+      "responseSnippet": "{\n  \"error\" : \"Permission denied\"\n}\n",
+      "status": "PASS"
+    },
+    {
+      "id": "LR1.15",
+      "name": "Intentional public visitor read: appearance (.read: true)",
+      "method": "GET",
+      "path": "/tenants/tenant_a/appearance.json",
+      "expectedStatus": 200,
+      "actualStatus": 200,
+      "responseSnippet": "null",
+      "status": "PASS"
+    },
+    {
+      "id": "LR1.16",
+      "name": "Intentional public visitor read: chatbot_config (.read: true)",
+      "method": "GET",
+      "path": "/tenants/tenant_a/chatbot_config.json",
+      "expectedStatus": 200,
+      "actualStatus": 200,
+      "responseSnippet": "null",
+      "status": "PASS"
+    },
+    {
+      "id": "LR1.17",
+      "name": "Intentional public visitor read: business_profile (.read: true)",
+      "method": "GET",
+      "path": "/tenants/tenant_a/business_profile.json",
+      "expectedStatus": 200,
+      "actualStatus": 200,
+      "responseSnippet": "null",
+      "status": "PASS"
+    },
+    {
+      "id": "LR1.18",
+      "name": "Atomic multi-path write attempting cross-tenant injection via REST patch",
+      "method": "PATCH",
+      "path": "/.json",
+      "expectedStatus": 401,
+      "actualStatus": 401,
+      "responseSnippet": "{\n  \"error\" : \"Permission denied\"\n}\n",
+      "status": "PASS"
+    }
+  ]
+}

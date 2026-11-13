@@ -1,9 +1,15 @@
 // src/pages/api/openai-token.js
 import { getMasterRuleBook, POLICY_VERSION } from "../../lib/ruleBook";
 import { withApiLogger } from "../../lib/apiMiddleware";
-import { resolveTenantId } from "../../lib/tenantResolver";
+import { resolveTenantId, getTenantConfig } from "../../lib/tenantResolver";
 import { db } from "../../lib/firebase";
 import { ref, get } from "firebase/database";
+import {
+  checkEffectiveVoicePermission,
+  checkTenantVoiceConcurrency,
+  createVoiceSessionRecord,
+  DEFAULT_VOICE_LIMITS,
+} from "../../lib/voiceLifecycle";
 import { recordAuthoritativeAiTrace } from "../../lib/aiTracer";
 import {
   validateRequestBodySize,
@@ -61,15 +67,48 @@ async function handler(req, res, apiLogger) {
       return res.status(429).json({ error: budget.error, code: budget.code, tenantId });
     }
 
-    // 🚨 SECURITY GATE: Verify tenant validity
+    // 🚨 SECURITY GATE: Verify tenant validity (CD11 Fail-Closed)
     if (isTenant) {
-      const tenantSnap = await get(ref(db, `tenants/${tenantId}`));
-      if (!tenantSnap.exists()) {
+      const tenantCheck = await getTenantConfig(tenantId);
+      if (!tenantCheck.exists) {
         apiLogger.warn("security", "unauthorized_fake_tenant_voice_token_access", {
-          context: { tenantId }
+          context: { tenantId },
         });
         return res.status(404).json({ error: `Tenant '${tenantId}' not found or unauthorized.` });
       }
+      if (tenantCheck.enabled === false) {
+        apiLogger.warn("security", "inactive_tenant_voice_token_access", {
+          context: { tenantId },
+        });
+        return res.status(403).json({
+          error: `Tenant '${tenantId}' is not active or pending setup.`,
+          code: "TENANT_INACTIVE",
+        });
+      }
+    }
+
+    // 🚨 CD09: EFFECTIVE VOICE PERMISSION CHECK (Global Kill Switch > Tenant Enablement)
+    const voicePerm = await checkEffectiveVoicePermission({ tenantId, dbInstance: db });
+    if (!voicePerm.allowed) {
+      apiLogger.warn("security", "voice_token_request_rejected_by_permission", {
+        context: { tenantId, reason: voicePerm.reason, scope: voicePerm.scope },
+      });
+      return res.status(voicePerm.status || 403).json({
+        error: voicePerm.reason,
+        scope: voicePerm.scope,
+      });
+    }
+
+    // 🚨 CD09: CONCURRENCY RESOURCE LIMIT CHECK
+    const concurrencyCheck = await checkTenantVoiceConcurrency({ tenantId, dbInstance: db });
+    if (!concurrencyCheck.allowed) {
+      apiLogger.warn("security", "voice_concurrency_limit_exceeded", {
+        context: { tenantId, activeCount: concurrencyCheck.activeCount, max: concurrencyCheck.maxConcurrent },
+      });
+      return res.status(429).json({
+        error: concurrencyCheck.reason,
+        activeCount: concurrencyCheck.activeCount,
+      });
     }
 
     const { session_id: rawSessionId, retrievedKnowledge = "" } = req.body || {};
@@ -315,7 +354,25 @@ async function handler(req, res, apiLogger) {
       estimatedCostUsd: "unknown",
     });
 
-    res.status(200).json({ ...data, versions: sessionVersions });
+    // 🚨 CD09: DURABLE SESSION RECORD CREATION & BINDING
+    const sessionRecordResult = await createVoiceSessionRecord({
+      tenantId,
+      sessionId: session_id,
+      conversationId: session_id,
+      clientIp,
+      maxDurationSeconds: DEFAULT_VOICE_LIMITS.MAX_SESSION_DURATION_SECONDS,
+      dbInstance: db,
+    });
+
+    res.status(200).json({
+      ...data,
+      versions: sessionVersions,
+      session_record: sessionRecordResult.session || {
+        session_id,
+        tenant_id: tenantId,
+        max_duration_seconds: DEFAULT_VOICE_LIMITS.MAX_SESSION_DURATION_SECONDS,
+      },
+    });
   } catch (error) {
     apiLogger.error("Token Generation Failure:", error);
     if (typeof budget !== 'undefined' && budget?.commit) budget.commit(0);

@@ -1,0 +1,608 @@
+{
+  "ticket": "CD11",
+  "title": "Repeatable Tenant Onboarding & Activation Checklist Acceptance Evidence",
+  "timestamp": "2026-11-06T13:01:51.927Z",
+  "summary": {
+    "total_tests": 85,
+    "passed": 85,
+    "failed": 0,
+    "all_passed": true
+  },
+  "results": [
+    {
+      "test_id": "TC11.1",
+      "name": "Status PENDING_SETUP defined",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.933Z"
+    },
+    {
+      "test_id": "TC11.2",
+      "name": "Status RESTRICTED defined",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.933Z"
+    },
+    {
+      "test_id": "TC11.3",
+      "name": "Status ACTIVE defined",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.933Z"
+    },
+    {
+      "test_id": "TC11.4",
+      "name": "Status SUSPENDED defined",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.933Z"
+    },
+    {
+      "test_id": "TC11.5",
+      "name": "All 7 operational checklist items defined",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.933Z"
+    },
+    {
+      "test_id": "TC11.6",
+      "name": "Checklist item: allowed_domains",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.933Z"
+    },
+    {
+      "test_id": "TC11.7",
+      "name": "Checklist item: tenant_mapping",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.933Z"
+    },
+    {
+      "test_id": "TC11.8",
+      "name": "Checklist item: services_areas",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.933Z"
+    },
+    {
+      "test_id": "TC11.9",
+      "name": "Checklist item: timezone_hours",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.933Z"
+    },
+    {
+      "test_id": "TC11.10",
+      "name": "Checklist item: approved_policies",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.933Z"
+    },
+    {
+      "test_id": "TC11.11",
+      "name": "Checklist item: supported_modes",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.933Z"
+    },
+    {
+      "test_id": "TC11.12",
+      "name": "Checklist item: recipients_limits",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.933Z"
+    },
+    {
+      "test_id": "TC11.13",
+      "name": "Empty tenant fails readiness validation",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.934Z"
+    },
+    {
+      "test_id": "TC11.14",
+      "name": "Empty tenant status is pending_setup",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.934Z"
+    },
+    {
+      "test_id": "TC11.15",
+      "name": "Empty tenant score is 0%",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.934Z"
+    },
+    {
+      "test_id": "TC11.16",
+      "name": "Passed count is 0",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.934Z"
+    },
+    {
+      "test_id": "TC11.17",
+      "name": "Total count is 7",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.934Z"
+    },
+    {
+      "test_id": "TC11.18",
+      "name": "Missing list contains detailed actionable requirements",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.934Z"
+    },
+    {
+      "test_id": "TC11.19",
+      "name": "Partial tenant is not ready for activation",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.934Z"
+    },
+    {
+      "test_id": "TC11.20",
+      "name": "Partial tenant passed 4 items",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.934Z"
+    },
+    {
+      "test_id": "TC11.21",
+      "name": "Partial tenant status is restricted",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.935Z"
+    },
+    {
+      "test_id": "TC11.22",
+      "name": "Partial tenant score is 57%",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.935Z"
+    },
+    {
+      "test_id": "TC11.23",
+      "name": "Complete tenant is ready for activation",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.965Z"
+    },
+    {
+      "test_id": "TC11.24",
+      "name": "Complete tenant status is active",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.965Z"
+    },
+    {
+      "test_id": "TC11.25",
+      "name": "Complete tenant score is 100%",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.965Z"
+    },
+    {
+      "test_id": "TC11.26",
+      "name": "All 7 items passed",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.965Z"
+    },
+    {
+      "test_id": "TC11.27",
+      "name": "Missing list is empty",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.965Z"
+    },
+    {
+      "test_id": "TC11.28",
+      "name": "assertTenantActivationReadiness threw error on incomplete tenant",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.965Z"
+    },
+    {
+      "test_id": "TC11.29",
+      "name": "Error code is TENANT_ACTIVATION_REQUIREMENTS_UNMET",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.965Z"
+    },
+    {
+      "test_id": "TC11.30",
+      "name": "Error status code is 422",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.966Z"
+    },
+    {
+      "test_id": "TC11.31",
+      "name": "Error details missing checklist items",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:45.966Z"
+    },
+    {
+      "test_id": "TC11.32",
+      "name": "Incomplete tenant activation rejected with HTTP 422 (received: 422)",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:47.110Z"
+    },
+    {
+      "test_id": "TC11.33",
+      "name": "Response error code is TENANT_ACTIVATION_REQUIREMENTS_UNMET",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:47.110Z"
+    },
+    {
+      "test_id": "TC11.34",
+      "name": "Response returns actionable list of missing checklist items",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:47.110Z"
+    },
+    {
+      "test_id": "TC11.35",
+      "name": "Tenant created with HTTP 201/200 (received: 201)",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.858Z"
+    },
+    {
+      "test_id": "TC11.36",
+      "name": "Creation successful",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.859Z"
+    },
+    {
+      "test_id": "TC11.37",
+      "name": "Newly created incomplete tenant is not activated",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.859Z"
+    },
+    {
+      "test_id": "TC11.38",
+      "name": "Initial status defaulted to pending_setup",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.859Z"
+    },
+    {
+      "test_id": "TC11.39",
+      "name": "Wildcard '*' origin rejected",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.859Z"
+    },
+    {
+      "test_id": "TC11.40",
+      "name": "Wildcard subdomain pattern rejected",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.859Z"
+    },
+    {
+      "test_id": "TC11.41",
+      "name": "Malicious javascript URI rejected",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.859Z"
+    },
+    {
+      "test_id": "TC11.42",
+      "name": "Empty origin rejected",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.859Z"
+    },
+    {
+      "test_id": "TC11.43",
+      "name": "Standard HTTPS web origin accepted",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.859Z"
+    },
+    {
+      "test_id": "TC11.44",
+      "name": "Subdomain HTTPS origin accepted",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.860Z"
+    },
+    {
+      "test_id": "TC11.45",
+      "name": "Localhost development origin accepted",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.860Z"
+    },
+    {
+      "test_id": "TC11.46",
+      "name": "127.0.0.1 development origin accepted",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.860Z"
+    },
+    {
+      "test_id": "TC11.47",
+      "name": "Exact origin allowed",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.861Z"
+    },
+    {
+      "test_id": "TC11.48",
+      "name": "Subdomain allowed",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.861Z"
+    },
+    {
+      "test_id": "TC11.49",
+      "name": "Secondary allowed origin allowed",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.861Z"
+    },
+    {
+      "test_id": "TC11.50",
+      "name": "Attacker domain rejected",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.861Z"
+    },
+    {
+      "test_id": "TC11.51",
+      "name": "Lookalike domain rejected",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.861Z"
+    },
+    {
+      "test_id": "TC11.52",
+      "name": "Insecure HTTP scheme mismatch rejected",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.862Z"
+    },
+    {
+      "test_id": "TC11.53",
+      "name": "Empty origin rejected",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.862Z"
+    },
+    {
+      "test_id": "TC11.54",
+      "name": "Empty whitelist rejected",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.862Z"
+    },
+    {
+      "test_id": "TC11.55",
+      "name": "widget.js does not fall back to 'default' tenant automatically",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.863Z"
+    },
+    {
+      "test_id": "TC11.56",
+      "name": "widget.js outputs clear error and halts when data-tenant is missing",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.863Z"
+    },
+    {
+      "test_id": "TC11.57",
+      "name": "widget.js enforces strict origin equality matching baseUrl",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.863Z"
+    },
+    {
+      "test_id": "TC11.58",
+      "name": "widget.js checks and rejects __proto__, constructor, and prototype pollution keys",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.863Z"
+    },
+    {
+      "test_id": "TC11.59",
+      "name": "widget.js strictly checks boolean types for isExpanded and hasPeek",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.863Z"
+    },
+    {
+      "test_id": "TC11.60",
+      "name": "Cross-origin postMessage dropped",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.864Z"
+    },
+    {
+      "test_id": "TC11.61",
+      "name": "Prototype pollution payload rejected",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.864Z"
+    },
+    {
+      "test_id": "TC11.62",
+      "name": "Valid resize message processed accurately",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:48.864Z"
+    },
+    {
+      "test_id": "TC11.63",
+      "name": "Unknown tenant returns exists: false",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:49.677Z"
+    },
+    {
+      "test_id": "TC11.64",
+      "name": "Unknown tenant returns enabled: false",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:49.677Z"
+    },
+    {
+      "test_id": "TC11.65",
+      "name": "Tenant ID preserved for audit tracing",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:49.677Z"
+    },
+    {
+      "test_id": "TC11.66",
+      "name": "Actionable error returned",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:49.677Z"
+    },
+    {
+      "test_id": "TC11.67",
+      "name": "No default tenant config leaked",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:49.677Z"
+    },
+    {
+      "test_id": "TC11.68",
+      "name": "Chat rejected unknown tenant with HTTP 403 (received: 403)",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:50.493Z"
+    },
+    {
+      "test_id": "TC11.69",
+      "name": "Chat error code is TENANT_INACTIVE",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:50.493Z"
+    },
+    {
+      "test_id": "TC11.70",
+      "name": "Leads API rejected cross-tenant spoofing with HTTP 403 (received: 403)",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:51.109Z"
+    },
+    {
+      "test_id": "TC11.71",
+      "name": "Token API returned 404 for unknown tenant (received: 404)",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:51.924Z"
+    },
+    {
+      "test_id": "TC11.72",
+      "name": "Embed page defines TENANT_REQUIRED error code",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:51.924Z"
+    },
+    {
+      "test_id": "TC11.73",
+      "name": "Embed page defines TENANT_NOT_FOUND error code",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:51.924Z"
+    },
+    {
+      "test_id": "TC11.74",
+      "name": "Embed page defines TENANT_INACTIVE error code",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:51.924Z"
+    },
+    {
+      "test_id": "TC11.75",
+      "name": "Embed page defines EMBED_ORIGIN_PROHIBITED error code",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:51.925Z"
+    },
+    {
+      "test_id": "TC11.76",
+      "name": "Embed page renders EmbedErrorCard on failure instead of chatbot",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:51.925Z"
+    },
+    {
+      "test_id": "TC11.77",
+      "name": "Second tenant passes all 7 operational readiness items",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:51.925Z"
+    },
+    {
+      "test_id": "TC11.78",
+      "name": "Second tenant activation status is active",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:51.926Z"
+    },
+    {
+      "test_id": "TC11.79",
+      "name": "Second tenant activation readiness score is 100%",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:51.926Z"
+    },
+    {
+      "test_id": "TC11.80",
+      "name": "Passed items count is 7",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:51.926Z"
+    },
+    {
+      "test_id": "TC11.81",
+      "name": "Tenant 1 partition contains Tenant 1 lead",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:51.926Z"
+    },
+    {
+      "test_id": "TC11.82",
+      "name": "Tenant 1 partition does NOT contain Tenant 2 lead",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:51.926Z"
+    },
+    {
+      "test_id": "TC11.83",
+      "name": "Tenant 2 partition contains Tenant 2 lead",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:51.926Z"
+    },
+    {
+      "test_id": "TC11.84",
+      "name": "Tenant 2 partition does NOT contain Tenant 1 lead",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:51.926Z"
+    },
+    {
+      "test_id": "TC11.85",
+      "name": "Global /leads root has 0 partition pollution",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:01:51.926Z"
+    }
+  ]
+}

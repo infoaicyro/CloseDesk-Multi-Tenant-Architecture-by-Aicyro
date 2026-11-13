@@ -2,6 +2,7 @@
 import { db } from "../../../lib/firebase";
 import { ref, get, update } from "firebase/database";
 import { createPulseLogger } from "../../../lib/loggerPresets";
+import { processSmartAlert } from "../../../lib/alertManager";
 
 const cronLogger = createPulseLogger("RetentionCleanupJob");
 
@@ -39,6 +40,15 @@ export default async function handler(req, res) {
         correlation: { correlation_id: txId },
         context: { message: "Retention policy is missing or not explicitly approved by PO. Aborting." }
       });
+
+      // 🚨 CD15: Alert Incident Owner to Stale/Unapproved Cleanup
+      await processSmartAlert("WARN", "system_event", "stale_cleanup", {
+        service: "CronRetention",
+        correlation_id: txId,
+        error_code: "RETENTION_UNAPPROVED_STALE",
+        error_message: "Log retention policy is missing or unapproved. Cleanup halted.",
+      });
+
       return res.status(200).json({ status: "aborted", reason: "Policy not approved." });
     }
 
@@ -80,6 +90,15 @@ export default async function handler(req, res) {
 
   } catch (error) {
     cronLogger.error("system_event", "retention_cleanup_failed", { correlation: { correlation_id: txId }, error });
+
+    // 🚨 CD15: Alert Incident Owner on Cleanup Failure
+    await processSmartAlert("CRITICAL", "system_event", "stale_cleanup", {
+      service: "CronRetention",
+      correlation_id: txId,
+      error_code: "RETENTION_CRON_FAILED",
+      error_message: error.message,
+    });
+
     return res.status(500).json({ error: "Internal processing error." });
   }
 }

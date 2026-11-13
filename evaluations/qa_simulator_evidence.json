@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-11-06T13:03:49.275Z",
+  "passed": 4,
+  "failed": 0,
+  "results": [
+    {
+      "name": "1. Successful Chat & Lead Creation",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "2. Unauthorized Cron Request",
+      "status": "PASS",
+      "code": 401
+    },
+    {
+      "name": "3. Secret Redaction Test",
+      "status": "PASS",
+      "code": 200
+    },
+    {
+      "name": "4. Admin Audit Log Generation",
+      "status": "PASS",
+      "code": 200
+    }
+  ]
+}

@@ -1,0 +1,434 @@
+{
+  "ticket": "CD15",
+  "title": "Deployment Recovery and Monitoring (P0 Minimum Runbook & P1 Hardening) Acceptance Evidence",
+  "timestamp": "2026-11-06T13:02:20.345Z",
+  "summary": {
+    "total_assertions": 54,
+    "passed": 54,
+    "failed": 0,
+    "release_status": "APPROVED_FOR_RELEASE"
+  },
+  "release_manifest": {
+    "release_id": "rel_2.1.0_f2b247b",
+    "timestamp": "2026-11-06T13:02:19.101Z",
+    "versions": {
+      "application_version": "2.1.0",
+      "worker_version": "2.1.0-cf-worker",
+      "rules_version": "2026.11.05-cd03-rules",
+      "rules_checksum_sha256": "49f360c2392f6e311618ea170be672711a5e5997d7894e32e8fdf4227d158a4d",
+      "policy_config_version": "2.15.0",
+      "environment_version": "pilot-staging-2.1.0",
+      "git_commit": "f2b247b"
+    },
+    "incident_management": {
+      "primary_owner": {
+        "name": "Platform SRE & Incident On-Call Lead",
+        "role": "Primary Incident Commander",
+        "email": "ops-oncall@closedesk.com",
+        "phone": "+1-800-555-0199",
+        "escalation_channel": "pagerduty://service/closedesk-sre-p0",
+        "escalation_sla_minutes": 15
+      },
+      "secondary_owner": {
+        "name": "Principal Security & Operations Officer",
+        "role": "Secondary Escalation / Security Officer",
+        "email": "security-ops@closedesk.com",
+        "phone": "+1-800-555-0198",
+        "escalation_channel": "pagerduty://service/closedesk-sec-p0",
+        "escalation_sla_minutes": 30
+      },
+      "release_manager": {
+        "name": "Release Management & DevOps Lead",
+        "role": "Release Verification Coordinator",
+        "email": "release-ops@closedesk.com"
+      },
+      "escalation_sla_minutes": 15,
+      "notification_channels": [
+        "email",
+        "pagerduty",
+        "system_alerts_queue"
+      ]
+    },
+    "release_status": "ACTIVE_PILOT_CANDIDATE"
+  },
+  "results": [
+    {
+      "test_id": "TC15.1",
+      "name": "Manifest contains application_version 2.1.0",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.101Z"
+    },
+    {
+      "test_id": "TC15.2",
+      "name": "Manifest contains worker_version 2.1.0-cf-worker",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.101Z"
+    },
+    {
+      "test_id": "TC15.3",
+      "name": "Manifest contains rules_version 2026.11.05-cd03-rules",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.101Z"
+    },
+    {
+      "test_id": "TC15.4",
+      "name": "Manifest contains valid SHA-256 rules checksum",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.101Z"
+    },
+    {
+      "test_id": "TC15.5",
+      "name": "Manifest contains policy_config_version 2.15.0",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.101Z"
+    },
+    {
+      "test_id": "TC15.6",
+      "name": "Manifest contains environment_version with pilot tag",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.101Z"
+    },
+    {
+      "test_id": "TC15.7",
+      "name": "Manifest contains valid git commit reference",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.101Z"
+    },
+    {
+      "test_id": "TC15.8",
+      "name": "Primary Incident Owner email is ops-oncall@closedesk.com",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.101Z"
+    },
+    {
+      "test_id": "TC15.9",
+      "name": "Primary Incident Owner SLA is strictly 15 minutes",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.101Z"
+    },
+    {
+      "test_id": "TC15.10",
+      "name": "Secondary Incident Owner email is security-ops@closedesk.com",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.101Z"
+    },
+    {
+      "test_id": "TC15.11",
+      "name": "Release Manager email is release-ops@closedesk.com",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.101Z"
+    },
+    {
+      "test_id": "TC15.12",
+      "name": "verifyReleaseManifest validates candidate bundle as complete",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.102Z"
+    },
+    {
+      "test_id": "TC15.13",
+      "name": "verifyReleaseManifest rejects incomplete manifest",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.102Z"
+    },
+    {
+      "test_id": "TC15.14",
+      "name": "All 3 pilot records remain readable under rolled-back runtime",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.102Z"
+    },
+    {
+      "test_id": "TC15.15",
+      "name": "Pilot records schema is 100% backward-compatible",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.102Z"
+    },
+    {
+      "test_id": "TC15.16",
+      "name": "Idempotency locks prevent 3/3 duplicate side effects on re-execution",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.102Z"
+    },
+    {
+      "test_id": "TC15.17",
+      "name": "Export envelope source_tenant_id is brightstar_hvac",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.103Z"
+    },
+    {
+      "test_id": "TC15.18",
+      "name": "Export envelope records exactly 2 leads",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.103Z"
+    },
+    {
+      "test_id": "TC15.19",
+      "name": "Export envelope records exactly 1 appointment",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.103Z"
+    },
+    {
+      "test_id": "TC15.20",
+      "name": "Export envelope records exactly 1 notification job",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.103Z"
+    },
+    {
+      "test_id": "TC15.21",
+      "name": "Export envelope records exactly 1 delivery attempt",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.103Z"
+    },
+    {
+      "test_id": "TC15.22",
+      "name": "Export envelope contains valid SHA-256 data checksum",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.103Z"
+    },
+    {
+      "test_id": "TC15.23",
+      "name": "Recovery status is RECONCILED",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.104Z"
+    },
+    {
+      "test_id": "TC15.24",
+      "name": "Recovery partition is explicitly confirmed as isolated",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.104Z"
+    },
+    {
+      "test_id": "TC15.25",
+      "name": "Data checksum verified against original export hash",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.104Z"
+    },
+    {
+      "test_id": "TC15.26",
+      "name": "Recovered leads count reconciled (2/2)",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.104Z"
+    },
+    {
+      "test_id": "TC15.27",
+      "name": "Recovered appointments count reconciled (1/1)",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.104Z"
+    },
+    {
+      "test_id": "TC15.28",
+      "name": "Recovered notification jobs count reconciled (1/1)",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.104Z"
+    },
+    {
+      "test_id": "TC15.29",
+      "name": "Restored records verify source tenant ownership invariant",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.104Z"
+    },
+    {
+      "test_id": "TC15.30",
+      "name": "Restoration attempt targeting live partition 'tenants/brightstar_hvac' is strictly BLOCKED",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.104Z"
+    },
+    {
+      "test_id": "TC15.31",
+      "name": "Restoration attempt targeting live partition 'tenants/summit_plumbing' is strictly BLOCKED",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.104Z"
+    },
+    {
+      "test_id": "TC15.32",
+      "name": "Restoration with corrupted checksum is detected and strictly BLOCKED",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.104Z"
+    },
+    {
+      "test_id": "TC15.33",
+      "name": "Provider failure alert severity is P0",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.104Z"
+    },
+    {
+      "test_id": "TC15.34",
+      "name": "Alert routes to Primary Incident Owner (ops-oncall@closedesk.com)",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.104Z"
+    },
+    {
+      "test_id": "TC15.35",
+      "name": "Alert SLA is 15 minutes",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.104Z"
+    },
+    {
+      "test_id": "TC15.36",
+      "name": "Alert specifies CD15 Runbook Section 4.2 remediation runbook",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.104Z"
+    },
+    {
+      "test_id": "TC15.37",
+      "name": "Alert provides at least 3 concrete immediate remediation steps",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.104Z"
+    },
+    {
+      "test_id": "TC15.38",
+      "name": "Handoff failure alert routes to failed-queue handling runbook",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.104Z"
+    },
+    {
+      "test_id": "TC15.39",
+      "name": "Stale cleanup alert specifies retention remediation runbook",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.104Z"
+    },
+    {
+      "test_id": "TC15.40",
+      "name": "First critical provider failure alert is dispatched immediately",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.519Z"
+    },
+    {
+      "test_id": "TC15.41",
+      "name": "Alert storm suppression suppresses 8/8 rapid duplicate alerts in throttle window",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.519Z"
+    },
+    {
+      "test_id": "TC15.42",
+      "name": "Spike tripwire dispatches aggregated spike alert at 10th occurrence",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:19.931Z"
+    },
+    {
+      "test_id": "TC15.43",
+      "name": "Delivery failure recorded successfully",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:20.341Z"
+    },
+    {
+      "test_id": "TC15.44",
+      "name": "Delivery status is FAILED",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:20.341Z"
+    },
+    {
+      "test_id": "TC15.45",
+      "name": "Job is moved to Dead-Letter state after reaching 3 attempts",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:20.341Z"
+    },
+    {
+      "test_id": "TC15.46",
+      "name": "Dead-Letter job stops automated retries (next_retry_at is null)",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:20.341Z"
+    },
+    {
+      "test_id": "TC15.47",
+      "name": "Authorized operator manually replays Dead-Letter job",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:20.343Z"
+    },
+    {
+      "test_id": "TC15.48",
+      "name": "Replayed job transitions back to QUEUED",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:20.343Z"
+    },
+    {
+      "test_id": "TC15.49",
+      "name": "Job records replay_count: 1",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:20.343Z"
+    },
+    {
+      "test_id": "TC15.50",
+      "name": "Job records replayed_by operator audit trail",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:20.343Z"
+    },
+    {
+      "test_id": "TC15.51",
+      "name": "Voice agent permitted when switches are open",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:20.344Z"
+    },
+    {
+      "test_id": "TC15.52",
+      "name": "Global Voice Kill Switch immediately blocks voice agent",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:20.345Z"
+    },
+    {
+      "test_id": "TC15.53",
+      "name": "Kill switch scope is identified as 'global'",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:20.345Z"
+    },
+    {
+      "test_id": "TC15.54",
+      "name": "Zero observed critical violations across deployment recovery and monitoring invariants",
+      "status": "PASS",
+      "details": {},
+      "timestamp": "2026-11-06T13:02:20.345Z"
+    }
+  ]
+}

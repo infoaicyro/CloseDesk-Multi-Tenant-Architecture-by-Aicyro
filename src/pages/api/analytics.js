@@ -121,7 +121,7 @@ async function handler(req, res, apiLogger) {
     }
 
     // 1. Resolve Tenant Context
-    const tenantId = resolveTenantId(req) || req.body?.tenant_id || "default";
+    const tenantId = sanitizeTenantId(resolveTenantId(req) || req.body?.tenant_id || "default");
     const isTenantScoped = tenantId && tenantId !== "default";
 
     // 🛑 DEDUPLICATION GUARD: Prevent duplicate page_view entries within 3 seconds for the same visitor

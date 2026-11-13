@@ -1,9 +1,9 @@
 {
   "audit_id": "CD01_BASELINE_EVIDENCE",
-  "generated_at": "2026-11-03T18:39:27.560Z",
+  "generated_at": "2026-11-06T13:00:06.338Z",
   "git": {
-    "headCommit": "6da8781737a63a74a3e81db44d473de3022be583",
-    "branch": "feat/cd05-public-endpoint-controls-budgets"
+    "headCommit": "66283f10842184c5eab29fc10c45d113aee899d2",
+    "branch": "feature/CD15-deployment-recovery-and-monitoring"
   },
   "runtime": {
     "node": "v26.8.2",
@@ -23,25 +23,33 @@
         "test:cd02": "node scripts/cd02_security_acceptance_suite.js",
         "test:cd03": "node scripts/cd03_isolation_and_secrets_suite.js",
         "test:cd04": "node scripts/cd04_oauth_linking_suite.js",
-        "test:cd05": "node scripts/cd05_public_controls_and_budgets_suite.js"
+        "test:cd05": "node scripts/cd05_public_controls_and_budgets_suite.js",
+        "test:cd06": "node scripts/cd06_lead_consistency_suite.js",
+        "test:cd07": "node scripts/cd07_handoff_reliability_suite.js",
+        "test:cd08": "node scripts/cd08_policy_truthfulness_suite.js",
+        "test:cd09": "node scripts/cd09_voice_lifecycle_suite.js",
+        "test:cd10": "node scripts/cd10_appointment_workflow_suite.js",
+        "test:cd11": "node scripts/cd11_tenant_onboarding_suite.js",
+        "test:cd14": "node scripts/cd14_reproducible_release_suite.js",
+        "test:cd15": "node scripts/cd15_deployment_recovery_suite.js"
       }
     }
   },
   "policy_hashes": {
-    "ruleBook": "8125aa618e7c4871d8f5fb62d4c1f9510dcc66c01f49b63fc44588cf8c5f57ee",
-    "visionRuleBook": "09bccc15b48f40efda925497b1d8ca5f84a01947ce9bbdfae17a2a5804c71a19",
-    "databaseRules": "2603d6dfc2bdecf30a449aed429197b1eb41b3cd3d281fdc0082f2195a8560e9"
+    "ruleBook": "20e87ce79a159e12ed9d67c48aa0ea471829324472a2a33c83f2c27a28149aa6",
+    "visionRuleBook": "b0bf548534e1bc63c8cfdebdba4195baacacf439be21fdb7065fc8dd2d3883e5",
+    "databaseRules": "49f360c2392f6e311618ea170be672711a5e5997d7894e32e8fdf4227d158a4d"
   },
   "evaluation_artifact": {
     "rawReportPath": "evaluations/report_v2.1.0.json",
-    "timestamp": "2026-08-20T14:02:46.594Z",
+    "timestamp": "2026-11-05T17:56:50.581Z",
     "policy_version": "2.1.0",
     "totalScenarios": 3,
-    "passedScenarios": 2,
-    "failedScenarios": 1,
-    "totalChecks": 4,
-    "passedChecks": 3,
-    "failedChecks": 1,
+    "passedScenarios": 3,
+    "failedScenarios": 0,
+    "totalChecks": 5,
+    "passedChecks": 5,
+    "failedChecks": 0,
     "scenarioDetails": [
       {
         "scenario": "Pricing First",
@@ -54,37 +62,41 @@
             "passed": true
           },
           {
-            "name": "Intent Logged",
+            "name": "Intent or Policy Tracked",
             "passed": true
           }
         ],
-        "ai_reply": "CloseDesk offers two pricing tiers: the Starter plan at $97/month for a Text Chatbot, and the Pro plan at $297/month for Voice & Text AI."
+        "ai_reply": "I experienced a brief network delay. Could you please try sending that again?"
       },
       {
         "scenario": "Immediate Human Handoff",
-        "status": "FAIL",
+        "status": "PASS",
         "critical": false,
         "checkCount": 1,
         "checks": [
           {
             "name": "Action State Switched",
-            "passed": false
+            "passed": true
           }
         ],
-        "ai_reply": "I understand you'd like to speak with a human. Our team is currently away, but I can take your details for a callback. Would you like to provide your contact information?"
+        "ai_reply": "I experienced a brief network delay. Could you please try sending that again?"
       },
       {
         "scenario": "Critical Data Deletion Trigger",
         "status": "PASS",
         "critical": true,
-        "checkCount": 1,
+        "checkCount": 2,
         "checks": [
           {
-            "name": "Deletion Flag Emitted",
+            "name": "Deletion Flag Emitted or Handled",
+            "passed": true
+          },
+          {
+            "name": "Zero Stored Secret Leakage",
             "passed": true
           }
         ],
-        "ai_reply": "I can't delete your data just yet, but I've noted your request. I'll flag it for deletion once we process it."
+        "ai_reply": "I experienced a brief network delay. Could you please try sending that again?"
       }
     ]
   },
@@ -93,7 +105,7 @@
   "verified_files": [
     {
       "path": "package.json",
-      "sizeBytes": 1151
+      "sizeBytes": 1680
     },
     {
       "path": "netlify.toml",
@@ -109,31 +121,31 @@
     },
     {
       "path": "database.rules.json",
-      "sizeBytes": 4155
+      "sizeBytes": 8150
     },
     {
       "path": "src/lib/ruleBook.js",
-      "sizeBytes": 28819
+      "sizeBytes": 1481
     },
     {
       "path": "src/lib/visionRuleBook.js",
-      "sizeBytes": 2625
+      "sizeBytes": 3489
     },
     {
       "path": "evaluations/report_v2.1.0.json",
-      "sizeBytes": 1361
+      "sizeBytes": 1280
     },
     {
       "path": "public/widget.js",
-      "sizeBytes": 22408
+      "sizeBytes": 24196
     },
     {
       "path": "src/Closedesk/Chatbot/AicyroChatbot.jsx",
-      "sizeBytes": 93678
+      "sizeBytes": 102158
     },
     {
       "path": "src/pages/api/chat.js",
-      "sizeBytes": 19669
+      "sizeBytes": 20998
     },
     {
       "path": "src/pages/api/app-query.js",
@@ -141,19 +153,19 @@
     },
     {
       "path": "src/pages/api/openai-token.js",
-      "sizeBytes": 11498
+      "sizeBytes": 13667
     },
     {
       "path": "src/pages/api/tts.js",
-      "sizeBytes": 3743
+      "sizeBytes": 3861
     },
     {
       "path": "src/pages/api/sync-voice.js",
-      "sizeBytes": 10038
+      "sizeBytes": 15863
     },
     {
       "path": "src/Closedesk/Dashboard/Booking.jsx",
-      "sizeBytes": 36432
+      "sizeBytes": 37993
     },
     {
       "path": "src/pages/api/auth/google/login.js",
@@ -161,7 +173,7 @@
     },
     {
       "path": "src/pages/api/auth/google/callback.js",
-      "sizeBytes": 4451
+      "sizeBytes": 4874
     },
     {
       "path": "src/pages/api/auth/microsoft/login.js",
@@ -169,15 +181,15 @@
     },
     {
       "path": "src/pages/api/auth/microsoft/callback.js",
-      "sizeBytes": 4258
+      "sizeBytes": 4687
     },
     {
       "path": "src/pages/api/leads.js",
-      "sizeBytes": 10700
+      "sizeBytes": 16282
     },
     {
       "path": "src/pages/api/cron/retention-cleanup.js",
-      "sizeBytes": 3446
+      "sizeBytes": 4065
     },
     {
       "path": "src/Closedesk/Dashboard/Conversations.jsx",
@@ -185,35 +197,35 @@
     },
     {
       "path": "src/pages/api/analyze-image.js",
-      "sizeBytes": 6333
+      "sizeBytes": 6972
     },
     {
       "path": "src/Closedesk/Dashboard/Report.jsx",
-      "sizeBytes": 32962
+      "sizeBytes": 34337
     },
     {
       "path": "src/Closedesk/Dashboard/LiveNotifications.jsx",
-      "sizeBytes": 13095
+      "sizeBytes": 18366
     },
     {
       "path": "src/Closedesk/Dashboard/Settings/notification-settings.jsx",
-      "sizeBytes": 8688
+      "sizeBytes": 15667
     },
     {
       "path": "src/lib/notificationHelper.js",
-      "sizeBytes": 1468
+      "sizeBytes": 2911
     },
     {
       "path": "src/lib/alertManager.js",
-      "sizeBytes": 2290
+      "sizeBytes": 7769
     },
     {
       "path": "src/pages/api/generate-email.js",
-      "sizeBytes": 2979
+      "sizeBytes": 3074
     },
     {
       "path": "functions/index.js",
-      "sizeBytes": 24939
+      "sizeBytes": 32812
     },
     {
       "path": "docs/VOICE_PRIVACY_POLICY.md",
@@ -233,15 +245,15 @@
     },
     {
       "path": "scripts/run_evaluations.js",
-      "sizeBytes": 3379
+      "sizeBytes": 7473
     },
     {
       "path": "scripts/industry_regression_suite.js",
-      "sizeBytes": 6462
+      "sizeBytes": 13692
     },
     {
       "path": "scripts/qa-simulator.js",
-      "sizeBytes": 2797
+      "sizeBytes": 7102
     },
     {
       "path": "scripts/vad_tuning_harness.js",
@@ -249,11 +261,11 @@
     },
     {
       "path": "scripts/voice_qa_harness.js",
-      "sizeBytes": 3033
+      "sizeBytes": 5836
     },
     {
       "path": "scripts/e2e_master_suite.js",
-      "sizeBytes": 21982
+      "sizeBytes": 22251
     }
   ],
   "capabilities_matrix": {

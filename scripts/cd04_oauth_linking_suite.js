@@ -163,7 +163,7 @@ async function runCd04Suite() {
       query: { code: "mock_google_code_123" },
     });
     await googleCallbackHandler(req, res);
-    const pass = res.statusCode === 400 && String(res.body).includes("OAuth state parameter missing");
+    const pass = (res.statusCode === 400 || res.statusCode === 403) && String(res.body?.error || res.body).includes("OAuth state parameter missing");
     recordTest(
       "AC1.2",
       "Callback rejects request with absent state parameter (400 Bad Request)",

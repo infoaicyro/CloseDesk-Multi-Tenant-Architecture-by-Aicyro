@@ -6,6 +6,7 @@ import { recordAuditTrail } from "../../../lib/auditTracer";
 import { withSessionGuard } from "../../../lib/authSession";
 import { safeDbGet, safeDbSet, safeDbUpdate } from "../../../lib/safeDb";
 import { redactSensitiveSecrets } from "../../../lib/sanitizer";
+import { setGlobalVoiceKillSwitch } from "../../../lib/voiceLifecycle";
 
 async function handler(req, res, apiLogger) {
   const session = req.session;
@@ -17,6 +18,8 @@ async function handler(req, res, apiLogger) {
       const targetPath =
         section === "email_config"
           ? "settings/email_config"
+          : section === "global_voice" || section === "voice_controls"
+          ? "settings/global_voice"
           : `superAdminSettings/${session.sub}/appearance`;
 
       let data = {};
@@ -61,6 +64,20 @@ async function handler(req, res, apiLogger) {
           status: "success",
         });
         return res.status(200).json({ success: true, message: "Email configuration saved." });
+      } else if (section === "global_voice" || section === "voice_controls") {
+        await setGlobalVoiceKillSwitch({
+          enabled: payload.enabled,
+          reason: payload.reason,
+          disabledBy: session.sub,
+          dbInstance: db,
+        });
+        recordAuditTrail(apiLogger, "global_voice_kill_switch_toggled", {
+          who: session.sub,
+          enabled: payload.enabled,
+          reason: payload.reason,
+          status: "success",
+        });
+        return res.status(200).json({ success: true, message: `Global voice ${payload.enabled ? "enabled" : "disabled"}.` });
       } else if (section === "appearance") {
         try {
           await safeDbSet(ref(db, `superAdminSettings/${session.sub}/appearance`), payload, 600);

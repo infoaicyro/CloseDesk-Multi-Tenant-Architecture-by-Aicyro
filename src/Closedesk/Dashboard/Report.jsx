@@ -68,6 +68,32 @@ export default function Report({ onLogout }) {
         setLeads([]);
       }
       setIsLoading(false);
+    }, (err) => {
+      console.warn("Report: RTDB leads read restricted, falling back to server-mediated API:", err);
+      const storedTenant = typeof window !== "undefined" ? localStorage.getItem("currentTenant") : null;
+      fetch(storedTenant && storedTenant !== "default" ? `/api/leads?tenant=${encodeURIComponent(storedTenant)}` : "/api/leads", {
+        headers: storedTenant && storedTenant !== "default" ? { "x-tenant-id": storedTenant } : {},
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          const leadsObj = data.leads || data || {};
+          const liveData = Object.keys(leadsObj).map((key) => {
+            const item = leadsObj[key];
+            let formattedScore = "Low";
+            if (item.lead_score) {
+              formattedScore = item.lead_score.charAt(0).toUpperCase() + item.lead_score.slice(1).toLowerCase();
+            }
+            return {
+              id: key,
+              ...item,
+              timestamp: item.last_interaction_at || item.conversation_started_at || null,
+              lead_score: formattedScore
+            };
+          });
+          setLeads(liveData.filter((lead) => lead.timestamp).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
+        })
+        .catch(() => setLeads([]))
+        .finally(() => setIsLoading(false));
     });
 
     const unsubscribeAnalytics = onValue(analyticsRef, (snapshot) => {

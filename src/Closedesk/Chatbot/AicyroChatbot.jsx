@@ -222,13 +222,26 @@ export default function AicyroChatbot({ tenantId: propTenantId } = {}) {
 
   useEffect(() => {
     if (typeof window !== "undefined" && window.parent && window.parent !== window) {
+      const targetOrigin = (() => {
+        try {
+          const hostParam = new URLSearchParams(window.location.search).get("host");
+          if (hostParam && hostParam !== "null" && hostParam !== "undefined") {
+            return new URL(hostParam).origin;
+          }
+          if (document.referrer) {
+            return new URL(document.referrer).origin;
+          }
+        } catch (_) {}
+        return "*";
+      })();
+
       window.parent.postMessage(
         { 
           type: "CLOSEDESK_WIDGET_RESIZE", 
           isExpanded: isOpen,
           hasPeek: showPeek
         }, 
-        "*"
+        targetOrigin
       );
     }
   }, [isOpen, showPeek]);
@@ -248,6 +261,7 @@ export default function AicyroChatbot({ tenantId: propTenantId } = {}) {
   const hasSentUrgentCallbackAlertRef = useRef(false);
   const [voiceState, setVoiceState] = useState("IDLE");
   const voiceCallRef = useRef(null);
+  const heartbeatTimerRef = useRef(null);
   const activeResponseRef = useRef(false);
   const [isListening, setIsListening] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
@@ -447,13 +461,70 @@ export default function AicyroChatbot({ tenantId: propTenantId } = {}) {
     fetchWithTrace("/api/sync-voice", { method: "POST", headers: { "Content-Type": "application/json", "x-tenant-id": tenantId }, body: JSON.stringify({ session_id: firebaseDbIdRef.current, action: "log_error", error_stage: stage, error_message: message, raw_error: rawError ? String(rawError) : null }) }, txId).catch(() => {});
   };
 
+  // 🚨 CD09: Safe teardown and mobile backgrounding handling
   useEffect(() => {
-    return () => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && voiceCallRef.current) {
+        const { pc, stream, audioEl, dc } = voiceCallRef.current;
+        if (dc) { try { dc.close(); } catch (_) {} }
+        if (pc) { try { pc.close(); } catch (_) {} }
+        if (stream) {
+          try { stream.getTracks().forEach((track) => track.stop()); } catch (_) {}
+        }
+        if (audioEl) {
+          try { audioEl.pause(); audioEl.srcObject = null; } catch (_) {}
+        }
+        voiceCallRef.current = null;
+        if (heartbeatTimerRef.current) {
+          clearInterval(heartbeatTimerRef.current);
+          heartbeatTimerRef.current = null;
+        }
+        setVoiceState("IDLE");
+        activeResponseRef.current = false;
+        addBotMessage("Voice call ended because the application was minimized or moved to the background. | You can continue communicating with me right here via text.", [], true);
+        setAgentMode("text");
+      }
+    };
+
+    const handlePageHide = () => {
       if (voiceCallRef.current) {
         const { pc, stream, audioEl, dc } = voiceCallRef.current;
-        if (dc) dc.close(); if (pc) pc.close();
-        if (stream) stream.getTracks().forEach((track) => track.stop());
-        if (audioEl) { audioEl.pause(); audioEl.srcObject = null; }
+        if (dc) { try { dc.close(); } catch (_) {} }
+        if (pc) { try { pc.close(); } catch (_) {} }
+        if (stream) {
+          try { stream.getTracks().forEach((track) => track.stop()); } catch (_) {}
+        }
+        if (audioEl) {
+          try { audioEl.pause(); audioEl.srcObject = null; } catch (_) {}
+        }
+        voiceCallRef.current = null;
+      }
+      if (heartbeatTimerRef.current) {
+        clearInterval(heartbeatTimerRef.current);
+        heartbeatTimerRef.current = null;
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("pagehide", handlePageHide);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("pagehide", handlePageHide);
+      if (heartbeatTimerRef.current) {
+        clearInterval(heartbeatTimerRef.current);
+        heartbeatTimerRef.current = null;
+      }
+      if (voiceCallRef.current) {
+        const { pc, stream, audioEl, dc } = voiceCallRef.current;
+        if (dc) { try { dc.close(); } catch (_) {} }
+        if (pc) { try { pc.close(); } catch (_) {} }
+        if (stream) {
+          try { stream.getTracks().forEach((track) => track.stop()); } catch (_) {}
+        }
+        if (audioEl) {
+          try { audioEl.pause(); audioEl.srcObject = null; } catch (_) {}
+        }
+        voiceCallRef.current = null;
       }
     };
   }, []);
@@ -513,6 +584,12 @@ export default function AicyroChatbot({ tenantId: propTenantId } = {}) {
       setVoiceState("PERMISSION_DENIED");
       callLogger.error("voice_lifecycle", "mic_permission_denied", { error });
       logVoiceError("MIC_PERMISSION", "Microphone access denied or failed", error.message || error.name);
+      addBotMessage(
+        "Microphone access was denied or is unavailable. | No worries! You can continue communicating with me right here by typing your message in the chat box below.",
+        [],
+        true
+      );
+      setAgentMode("text");
       return;
     }
 
@@ -523,6 +600,12 @@ export default function AicyroChatbot({ tenantId: propTenantId } = {}) {
 
       if (!tokenResponse.ok) {
         logVoiceError("TOKEN_FETCH", "Failed to fetch OpenAI token", data.error);
+        addBotMessage(
+          `Voice unavailable: ${data.error || "Voice features have been disabled."} | Please continue via text chat below.`,
+          [],
+          true
+        );
+        setAgentMode("text");
         throw new Error(data.error || "Failed to fetch session token.");
       }
 
@@ -546,6 +629,31 @@ export default function AicyroChatbot({ tenantId: propTenantId } = {}) {
           hasSentStartAlertRef.current = true;
           queueEmailAlert("New Voice Call Started", "A visitor has connected to the AI Voice Agent.", leadDataRef.current, "start");
         }
+
+        // 🚨 CD09: Periodic heartbeat & active-session kill-switch validation
+        if (heartbeatTimerRef.current) clearInterval(heartbeatTimerRef.current);
+        heartbeatTimerRef.current = setInterval(async () => {
+          try {
+            const hbRes = await fetch("/api/voice/session", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "x-tenant-id": tenantId },
+              body: JSON.stringify({ action: "heartbeat", session_id: firebaseDbId }),
+            });
+            if (hbRes.ok) {
+              const hbData = await hbRes.json();
+              if (!hbData.active) {
+                callLogger.warn("voice_lifecycle", "voice_session_revoked_by_server", { hbData });
+                handleEndVoiceCall("revoked_by_server");
+                addBotMessage(
+                  `Voice session ended: ${hbData.reason || "Voice services have been disabled."} | Please continue via text chat below.`,
+                  [],
+                  true
+                );
+                setAgentMode("text");
+              }
+            }
+          } catch (_) {}
+        }, 10000);
       };
 
       dataChannel.onclose = () => {
@@ -581,8 +689,15 @@ export default function AicyroChatbot({ tenantId: propTenantId } = {}) {
 
           if (event.type === "input_audio_buffer.speech_started") {
             setVoiceState((prev) => prev === "SPEAKING" ? "INTERRUPTED" : "LISTENING");
-            if (activeResponseRef.current) callLogger.warn("voice_lifecycle", "barge_in", { context: { message: "User interrupted the AI" }});
-            else callLogger.info("voice_lifecycle", "speech_started");
+            if (activeResponseRef.current) {
+              callLogger.warn("voice_lifecycle", "barge_in", { context: { message: "User interrupted the AI" }});
+              try { dataChannel.send(JSON.stringify({ type: "response.cancel" })); } catch (_) {}
+              if (voiceCallRef.current?.audioEl) {
+                try { voiceCallRef.current.audioEl.pause(); } catch (_) {}
+              }
+            } else {
+              callLogger.info("voice_lifecycle", "speech_started");
+            }
             if (turnMetricsRef.current && activeResponseRef.current) { turnMetricsRef.current.interrupted = true; flushTurnTelemetry(); }
             resetTurnMetrics(); turnMetricsRef.current.speech_start = Date.now();
           } 
@@ -666,20 +781,47 @@ export default function AicyroChatbot({ tenantId: propTenantId } = {}) {
     }
   };
 
-  const handleEndVoiceCall = () => {
+  const handleEndVoiceCall = (reason = "user_ended") => {
     try {
+      if (heartbeatTimerRef.current) {
+        clearInterval(heartbeatTimerRef.current);
+        heartbeatTimerRef.current = null;
+      }
       if (voiceCallRef.current) {
         const { pc, stream, audioEl, dc } = voiceCallRef.current;
-        if (dc) dc.close(); if (pc) pc.close();
-        if (stream) stream.getTracks().forEach((track) => track.stop());
-        if (audioEl) { audioEl.pause(); audioEl.srcObject = null; }
+        if (dc) { try { dc.close(); } catch (_) {} }
+        if (pc) { try { pc.close(); } catch (_) {} }
+        if (stream) {
+          try {
+            stream.getTracks().forEach((track) => {
+              try { track.stop(); } catch (_) {}
+            });
+          } catch (_) {}
+        }
+        if (audioEl) {
+          try {
+            audioEl.pause();
+            audioEl.srcObject = null;
+          } catch (_) {}
+        }
         voiceCallRef.current = null;
       }
-      setVoiceState("IDLE"); activeResponseRef.current = false;
-      voiceLogger.info("voice_lifecycle", "voice_session_ended", { context: { session_id: firebaseDbId }});
-      logToFirebase("Call Ended", "Voice connection disconnected.", leadDataRef.current);
+      setVoiceState("IDLE");
+      activeResponseRef.current = false;
+      voiceLogger.info("voice_lifecycle", "voice_session_ended", { context: { session_id: firebaseDbId, reason }});
+      logToFirebase("Call Ended", `Voice connection disconnected (${reason}).`, leadDataRef.current);
       submitLead({ ...leadDataRef.current, last_interaction_at: new Date().toISOString() });
-    } catch (error) { voiceLogger.error("webrtc", "end_call_failed", { error }); setVoiceState("IDLE"); }
+
+      // Notify backend to update session status
+      fetch("/api/voice/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-tenant-id": tenantId },
+        body: JSON.stringify({ action: "end", session_id: firebaseDbId, reason }),
+      }).catch(() => {});
+    } catch (error) {
+      voiceLogger.error("webrtc", "end_call_failed", { error });
+      setVoiceState("IDLE");
+    }
   };
 
   const handleToggleMode = async () => {
@@ -945,12 +1087,60 @@ export default function AicyroChatbot({ tenantId: propTenantId } = {}) {
     uiLogger.info("booking_lifecycle", "booking_creation_started", { context: { session_id: firebaseDbId, target_time: timeText }});
 
     // Default Fallback Email Content (Used if the webhook fails)
-    let emailSubject = "Your Demo is Confirmed!";
-    let emailBody = `Hi ${data.name || "there"},\n\nYour meeting is confirmed for ${timeText}. We look forward to speaking with you!`;
-    let bookingId = `bk_${txId.substring(0,8)}`;
+    let emailSubject = "Your Appointment is Confirmed!";
+    let emailBody = `Hi ${data.name || "there"},\n\nYour appointment is confirmed for ${timeText}. We look forward to speaking with you!`;
+    let bookingId = null;
+    let isCommitted = false;
+    let isRequestOnly = false;
 
+    // 1. Authoritative Appointment Booking via CloseDesk Scheduler
     try {
-      // Attempt to hit the Make.com webhook
+      const bookRes = await fetchWithTrace(
+        "/api/appointments/book",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-tenant-id": tenantId,
+            "x-idempotency-key": `op_book_${firebaseDbId || txId}`,
+          },
+          body: JSON.stringify({
+            tenant_id: tenantId,
+            lead_id: firebaseDbId,
+            start_time: data.booked_slot || new Date().toISOString(),
+            duration_minutes: 60,
+            service: data.service || "General Consultation",
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            customer_agreement: { confirmed: true, channel: "chat" },
+            booking_mode: "confirmed_booking",
+          }),
+        },
+        txId,
+      );
+
+      const bookResult = await bookRes.json();
+
+      if (bookRes.status === 409 || bookResult.code === "SLOT_CAPACITY_EXCEEDED") {
+        setIsProcessing(false);
+        addBotMessage(`⚠️ Slot Unavailable | That time slot was just booked by another customer. Please select a different time or date.`, [], true);
+        setStep(STEPS.SELECT_TIME);
+        return;
+      }
+
+      if (bookResult.status === "request_recorded" || bookResult.bookingMode === "request_only") {
+        isRequestOnly = true;
+      } else if (bookResult.success && bookResult.status === "booking_committed") {
+        isCommitted = true;
+        bookingId = bookResult.appointment_id || bookResult.appointment?.appointment_id;
+      }
+    } catch (schedErr) {
+      uiLogger.warn("booking_lifecycle", "scheduler_network_fallback", { error: schedErr });
+    }
+
+    // 2. Email drafting webhook (if configured)
+    try {
       const response = await fetchWithTrace(
         "/api/generate-email",
         { method: "POST", headers: { "Content-Type": "application/json", "x-tenant-id": tenantId }, body: JSON.stringify({ name: data.name, business_type: data.business_type, time: timeText }) },
@@ -961,34 +1151,54 @@ export default function AicyroChatbot({ tenantId: propTenantId } = {}) {
         const generatedEmail = await response.json();
         emailSubject = generatedEmail.subject || emailSubject;
         emailBody = generatedEmail.body || emailBody;
-        bookingId = generatedEmail.messageId || bookingId;
-      } else {
-        uiLogger.warn("ai_tool", "email_generation_warning", { context: { message: `Webhook returned status ${response.status}. Using fallback email content.` }});
       }
     } catch (error) {
       uiLogger.warn("ai_tool", "email_generation_network_error", { context: { message: "Could not reach email generation API. Using fallback email content." }, error });
     }
 
     try {
-      // 🔥 Proceed with the booking regardless of the email webhook's success
       uiLogger.info("ai_tool", "tool_call_success", { context: { tool_name: "create_booking_and_email", tool_call_id: txId, result_status: "success" }, duration_ms: Date.now() - startTime });
-      uiLogger.info("booking_lifecycle", "booking_created", { context: { session_id: firebaseDbId, booking_id: bookingId, target_time: timeText }, duration_ms: Date.now() - startTime });
 
-      if (!hasSentMeetingAlertRef.current) {
-        hasSentMeetingAlertRef.current = true;
-        queueEmailAlert("Meeting Booked! 📅", `${data.name || "A visitor"} confirmed a meeting for ${timeText}.`, data, "end", { visitorEmail: data.email, subject: emailSubject, body: emailBody });
+      if (isCommitted && bookingId) {
+        // Authoritatively confirmed booking
+        uiLogger.info("booking_lifecycle", "booking_created", { context: { session_id: firebaseDbId, booking_id: bookingId, target_time: timeText }, duration_ms: Date.now() - startTime });
+
+        if (!hasSentMeetingAlertRef.current) {
+          hasSentMeetingAlertRef.current = true;
+          queueEmailAlert("Meeting Booked! 📅", `${data.name || "A visitor"} confirmed a meeting for ${timeText}.`, data, "end", { visitorEmail: data.email, subject: emailSubject, body: emailBody });
+        }
+
+        const confirmedLead = await submitLead({
+          ...data,
+          booking_status: "Meeting Booked",
+          requested_action: "Meeting Booked",
+          appointment_id: bookingId,
+          authoritative_commit: true,
+          generated_subject: emailSubject,
+          generated_body: emailBody,
+          conversation_ended_at: new Date().toISOString(),
+        });
+        setIsProcessing(false);
+        addBotMessage(`✅ Appointment Confirmed! | Your appointment is officially booked for ${timeText} (Ref: ${confirmedLead?.lead_id || bookingId}, Booking Ref: ${bookingId}). We look forward to meeting with you!`, [{ label: "Close Chat", value: "close" }], true);
+      } else {
+        // Truthful Request-Only handling
+        uiLogger.info("booking_lifecycle", "appointment_request_submitted", { context: { session_id: firebaseDbId, target_time: timeText }});
+
+        const pendingLead = await submitLead({
+          ...data,
+          booking_status: "Appointment Request Submitted",
+          requested_action: "Appointment Request Submitted",
+          conversation_ended_at: new Date().toISOString(),
+        });
+        setIsProcessing(false);
+        addBotMessage(`✅ Request Received! | Your appointment request for ${timeText} has been recorded (Ref: ${pendingLead?.lead_id || "Received"}). Our team will review availability and confirm your booking shortly.`, [{ label: "Close Chat", value: "close" }], true);
       }
-
-      submitLead({ ...data, booking_status: "Meeting Booked", requested_action: "Meeting Booked", generated_subject: emailSubject, generated_body: emailBody, conversation_ended_at: new Date().toISOString() });
-      setIsProcessing(false);
-      addBotMessage(`✅ Contact Confirmed! | Your demo is officially booked for ${timeText}. We have securely saved your details and sent a calendar invite to ${data.email || "your email"}.`, [{ label: "Close Chat", value: "close" }], true);
     
     } catch (dbError) {
-      // Only throw a fatal Booking Error if the actual database submission fails
       uiLogger.error("booking_lifecycle", "booking_failed_fatal", { error: dbError, context: { session_id: firebaseDbId, target_time: timeText }});
       
       setIsProcessing(false);
-      addBotMessage(`⚠️ Booking Error | Sorry, I couldn't secure that calendar slot due to a network error. Please try selecting a different time or contact us directly.`, [], true);
+      addBotMessage(`⚠️ Booking Error | Sorry, I couldn't record that appointment due to a network error. Please try selecting a different time or contact us directly.`, [], true);
       setStep(STEPS.AI_CHAT_MODE); 
     }
   }
@@ -1000,21 +1210,42 @@ export default function AicyroChatbot({ tenantId: propTenantId } = {}) {
 
     try {
       const currentTranscript = messagesRef.current.map((m) => `[${m.role.toUpperCase()}]: ${m.text || m.content || "Interaction"}`).join("\n");
+      const operationKey = data.operation_key || `op_lead_${firebaseDbId || getOrCreateAnonId() || txId}_${data.booking_status || "update"}`;
       const payload = {
         source: "Website AI Front Desk", source_page: typeof window !== "undefined" ? window.location.href : "Unknown",
         anonId: getOrCreateAnonId() || "unknown", deviceName: getReadableDeviceName(), full_conversation_transcript: currentTranscript,
         conversation_started_at: sessionStartTime, last_interaction_at: new Date().toISOString(), ...(!firebaseDbId && { timestamp: new Date().toISOString() }),
-        firebaseId: firebaseDbId, ...data,
+        firebaseId: firebaseDbId, operation_key: operationKey, ...data,
       };
       const sanitizedPayload = Object.fromEntries(Object.entries(payload).map(([k, v]) => [k, v === undefined || v === null ? "" : v]));
 
-      const res = await fetchWithTrace("/api/leads", { method: "POST", headers: { "Content-Type": "application/json", "x-tenant-id": tenantId }, body: JSON.stringify(sanitizedPayload), keepalive: true }, txId);
-      if (!res.ok) throw new Error(`Server status: ${res.status}`);
-      
-      uiLogger.info("ai_tool", "tool_call_success", { context: { tool_name: "submit_lead", tool_call_id: txId, result_status: "success" }, duration_ms: Date.now() - startTime });
+      const res = await fetchWithTrace("/api/leads", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-tenant-id": tenantId,
+          "x-idempotency-key": operationKey,
+        },
+        body: JSON.stringify(sanitizedPayload),
+        keepalive: true,
+      }, txId);
+
+      const resData = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(resData.error || `Server status: ${res.status}`);
+      }
+
+      if (resData.id && !firebaseDbId) {
+        setFirebaseDbId(resData.id);
+        firebaseDbIdRef.current = resData.id;
+      }
+
+      uiLogger.info("ai_tool", "tool_call_success", { context: { tool_name: "submit_lead", tool_call_id: txId, result_status: "success", lead_id: resData.id }, duration_ms: Date.now() - startTime });
+      return { success: true, lead_id: resData.id, ...resData };
     } catch (err) {
       uiLogger.error("ai_tool", "tool_call_failed", { error: err, context: { tool_name: "submit_lead", tool_call_id: txId, result_status: "failed" }, duration_ms: Date.now() - startTime });
       uiLogger.error("lead_capture", "submission_failed", { error: err, correlation: { correlation_id: txId } });
+      throw err;
     }
   }
 

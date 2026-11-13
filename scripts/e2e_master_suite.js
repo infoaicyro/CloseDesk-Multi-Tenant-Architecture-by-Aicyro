@@ -3,10 +3,14 @@ const fs = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer-core');
 
-const EDGE_PATH = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
-const ARTIFACT_DIR = 'C:\\Users\\moids\\.gemini\\antigravity\\brain\\c4af3c56-d127-41a6-99e9-8ebaa677fba1';
+const BROWSER_PATH = fs.existsSync('C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe')
+  ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+  : (fs.existsSync('C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe')
+      ? 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
+      : 'chrome');
+const ARTIFACT_DIR = process.env.ARTIFACT_DIR || path.join(__dirname, '..', 'evaluations');
 const SCREENSHOTS_DIR = path.join(ARTIFACT_DIR, 'screenshots');
-const BASE_URL = 'https://plumbingengine.netlify.app';
+const BASE_URL = process.env.BASE_URL || 'https://plumbingengine.netlify.app';
 
 if (!fs.existsSync(SCREENSHOTS_DIR)) {
   fs.mkdirSync(SCREENSHOTS_DIR, { recursive: true });
@@ -49,7 +53,7 @@ async function capture(page, filename, description) {
   try {
     console.log('🚀 Launching automated browser for Visual E2E Execution...');
     browser = await puppeteer.launch({
-      executablePath: EDGE_PATH,
+      executablePath: BROWSER_PATH,
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-web-security']
     });

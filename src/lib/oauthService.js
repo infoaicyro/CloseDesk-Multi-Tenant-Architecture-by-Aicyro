@@ -1,3 +1,4 @@
+import { consumedStateJtis } from "./oauthState.js";
 // src/lib/oauthService.js
 import crypto from "crypto";
 import { sanitizeTenantId } from "./tenantResolver";
@@ -241,7 +242,7 @@ export function verifyAndConsumeOAuthState(rawState, expectedProvider, secret = 
     return { valid: false, error: "OAuth state token has expired (replay window closed)" };
   }
 
-  if (expectedProvider && payload.provider !== String(expectedProvider).toLowerCase()) {
+  if (expectedProvider && payload.provider && payload.provider !== String(expectedProvider).toLowerCase()) {
     return {
       valid: false,
       error: `OAuth state provider mismatch (bound to '${payload.provider}', expected '${expectedProvider}')`,
@@ -250,12 +251,14 @@ export function verifyAndConsumeOAuthState(rawState, expectedProvider, secret = 
 
   // 🚨 REPLAY PROTECTION: Verify that the nonce has not been consumed
   cleanExpiredNonces();
-  if (consumedNonces.has(payload.nonce)) {
+  const nonce = payload.nonce || payload.jti;
+  if ((nonce && consumedNonces.has(nonce)) || (payload.jti && consumedStateJtis && consumedStateJtis.has(payload.jti))) {
     return { valid: false, error: "OAuth state token has already been consumed (replay attack rejected)" };
   }
 
   // Mark nonce as consumed
-  consumedNonces.set(payload.nonce, payload.exp);
+  if (nonce) consumedNonces.set(nonce, payload.exp);
+  if (payload.jti && consumedStateJtis) consumedStateJtis.set(payload.jti, (payload.exp ? payload.exp * 1000 : Date.now() + 600000) + 60000);
 
   return { valid: true, payload };
 }

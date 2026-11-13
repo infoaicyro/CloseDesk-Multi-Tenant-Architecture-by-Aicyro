@@ -12,7 +12,15 @@
     "test:cd02": "node scripts/cd02_security_acceptance_suite.js",
     "test:cd03": "node scripts/cd03_isolation_and_secrets_suite.js",
     "test:cd04": "node scripts/cd04_oauth_linking_suite.js",
-    "test:cd05": "node scripts/cd05_public_controls_and_budgets_suite.js"
+    "test:cd05": "node scripts/cd05_public_controls_and_budgets_suite.js",
+    "test:cd06": "node scripts/cd06_lead_consistency_suite.js",
+    "test:cd07": "node scripts/cd07_handoff_reliability_suite.js",
+    "test:cd08": "node scripts/cd08_policy_truthfulness_suite.js",
+    "test:cd09": "node scripts/cd09_voice_lifecycle_suite.js",
+    "test:cd10": "node scripts/cd10_appointment_workflow_suite.js",
+    "test:cd11": "node scripts/cd11_tenant_onboarding_suite.js",
+    "test:cd14": "node scripts/cd14_reproducible_release_suite.js",
+    "test:cd15": "node scripts/cd15_deployment_recovery_suite.js"
   },
   "engines": {
     "node": ">=20"

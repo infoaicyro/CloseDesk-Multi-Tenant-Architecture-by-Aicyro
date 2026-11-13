@@ -78,8 +78,20 @@ export default function CookieDataDisplay() {
         setLoading(false);
       },
       (err) => {
-        console.error('Firebase Cookie Data read error:', err);
-        setLoading(false);
+        console.warn("RTDB direct cookie read restricted, falling back to server-mediated API:", err);
+        const storedTenant = typeof window !== "undefined" ? localStorage.getItem("currentTenant") : null;
+        fetch("/api/cookie-consent", {
+          headers: storedTenant && storedTenant !== "default" ? { "x-tenant-id": storedTenant } : {},
+        })
+          .then((r) => r.json())
+          .then((res) => {
+            if (res && res.cookies) {
+              const items = Object.entries(res.cookies).map(([id, val]) => ({ id, ...val }));
+              setCookies(items);
+            }
+          })
+          .catch(() => {})
+          .finally(() => setLoading(false));
       }
     );
 

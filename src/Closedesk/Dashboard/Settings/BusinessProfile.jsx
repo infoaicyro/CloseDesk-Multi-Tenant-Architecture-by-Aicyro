@@ -42,7 +42,6 @@ const generateTimezonesWithGMT = () => {
   return tzs
     .map((tz) => {
       try {
-        // Extract the short GMT offset string (e.g., "GMT-5", "GMT+2")
         const formatter = new Intl.DateTimeFormat("en-US", {
           timeZone: tz,
           timeZoneName: "shortOffset",
@@ -51,7 +50,6 @@ const generateTimezonesWithGMT = () => {
         let offset =
           parts.find((p) => p.type === "timeZoneName")?.value || "GMT";
 
-        // Normalize 'GMT' to 'GMT+0' for better consistency visually
         if (offset === "GMT") offset = "GMT+0";
 
         const formattedName = tz.replace(/_/g, " ");
@@ -70,6 +68,7 @@ const generateTimezonesWithGMT = () => {
 const TIMEZONE_OPTIONS = generateTimezonesWithGMT();
 
 export default function BusinessProfile({ onNavigate }) {
+  const [tenantId, setTenantId] = useState("default");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
@@ -91,6 +90,10 @@ export default function BusinessProfile({ onNavigate }) {
     avgJobValue: "",
     address: "",
   });
+  const [supportedServicesText, setSupportedServicesText] = useState("");
+  const [unsupportedServicesText, setUnsupportedServicesText] = useState("");
+  const [serviceAreaText, setServiceAreaText] = useState("");
+
   const [schedule, setSchedule] = useState(DEFAULT_SCHEDULE);
   const [timezone, setTimezone] = useState("");
 
@@ -103,19 +106,37 @@ export default function BusinessProfile({ onNavigate }) {
   };
 
   useEffect(() => {
+    const activeTenant = typeof window !== "undefined"
+      ? (localStorage.getItem("currentTenant") || "default")
+      : "default";
+    setTenantId(activeTenant);
+
+    const profilePath = activeTenant && activeTenant !== "default"
+      ? `tenants/${activeTenant}/business_profile`
+      : "settings/business_profile";
+
     const fetchProfile = async () => {
       try {
-        const snapshot = await get(ref(db, "settings/business_profile"));
+        const snapshot = await get(ref(db, profilePath));
         if (snapshot.exists()) {
           const data = snapshot.val();
-          if (data.basic_info)
-            setFormData((prev) => ({ ...prev, ...data.basic_info }));
+          if (data.basic_info) setFormData((prev) => ({ ...prev, ...data.basic_info }));
           if (data.operating_hours) setSchedule(data.operating_hours);
 
           if (data.timezone) {
             setTimezone(data.timezone);
           } else {
             setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+          }
+
+          if (Array.isArray(data.supported_services)) {
+            setSupportedServicesText(data.supported_services.join(", "));
+          }
+          if (Array.isArray(data.unsupported_services)) {
+            setUnsupportedServicesText(data.unsupported_services.join(", "));
+          }
+          if (Array.isArray(data.service_area)) {
+            setServiceAreaText(data.service_area.join(", "));
           }
         } else {
           setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
@@ -161,7 +182,10 @@ export default function BusinessProfile({ onNavigate }) {
       setLogoPreview(base64Image);
 
       try {
-        await set(ref(db, "settings/branding/logo"), base64Image);
+        const brandingPath = tenantId && tenantId !== "default"
+          ? `tenants/${tenantId}/branding/logo`
+          : "settings/branding/logo";
+        await set(ref(db, brandingPath), base64Image);
         showToast("Logo updated successfully!", "success");
       } finally {
         setIsUploadingLogo(false);
@@ -172,14 +196,36 @@ export default function BusinessProfile({ onNavigate }) {
 
   const handleSaveProfile = async () => {
     setIsSaving(true);
+    const profilePath = tenantId && tenantId !== "default"
+      ? `tenants/${tenantId}/business_profile`
+      : "settings/business_profile";
+
+    const parsedSupported = supportedServicesText
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    const parsedUnsupported = unsupportedServicesText
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    const parsedArea = serviceAreaText
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
     try {
-      await set(ref(db, "settings/business_profile"), {
+      await set(ref(db, profilePath), {
         basic_info: formData,
         operating_hours: schedule,
         timezone: timezone,
+        supported_services: parsedSupported,
+        unsupported_services: parsedUnsupported,
+        service_area: parsedArea,
         updated_at: new Date().toISOString(),
       });
-      showToast("Business profile updated successfully!", "success");
+      showToast(`Tenant '${tenantId}' business profile saved!`, "success");
     } catch (error) {
       showToast("Failed to save changes.", "error");
     } finally {
@@ -200,11 +246,16 @@ export default function BusinessProfile({ onNavigate }) {
     <main className="relative z-10 flex-grow w-full max-w-[1600px] mx-auto px-6 sm:px-12 py-8 fade-in">
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-[var(--foreground)] tracking-tight">
-            Business Profile
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-[var(--foreground)] tracking-tight">
+              Business Profile & Service Truths
+            </h1>
+            <span className="text-xs font-mono font-semibold px-2.5 py-1 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-full text-[var(--primary)] uppercase">
+              Tenant: {tenantId}
+            </span>
+          </div>
           <p className="text-[var(--foreground-muted)] text-sm mt-1">
-            Configure your core identity and operational hours.
+            Configure authoritative business facts, coverage areas, service boundaries, and operating hours.
           </p>
         </div>
         <button
@@ -280,13 +331,14 @@ export default function BusinessProfile({ onNavigate }) {
 
               <div className="space-y-2">
                 <label className="text-[11px] font-bold text-[var(--foreground-muted)] uppercase tracking-widest">
-                  Industry
+                  Industry / Category
                 </label>
                 <input
                   type="text"
                   name="industry"
                   value={formData.industry}
                   onChange={handleInputChange}
+                  placeholder="e.g. HVAC, Plumbing, Restoration"
                   className="w-full bg-[var(--background)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-sm focus:border-[var(--primary)] transition-all outline-none"
                 />
               </div>
@@ -335,65 +387,83 @@ export default function BusinessProfile({ onNavigate }) {
                   name="address"
                   value={formData.address}
                   onChange={handleInputChange}
-                  rows="3"
+                  rows="2"
                   className="w-full bg-[var(--background)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-sm focus:border-[var(--primary)] transition-all resize-none outline-none"
                 />
               </div>
             </div>
           </div>
 
-          {/* Account Security Section */}
+          {/* Service Catalog & Boundaries */}
           <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl p-8 shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <h2 className="text-lg font-bold text-[var(--foreground)] tracking-tight border-b border-[var(--border-color)] pb-4 mb-6">
+              Service Truths & Coverage Area
+            </h2>
+
+            <div className="space-y-5">
               <div>
-                <h2 className="text-lg font-bold text-[var(--foreground)] tracking-tight">
-                  Account Security
-                </h2>
-                <p className="text-xs text-[var(--foreground-muted)] mt-1">
-                  Manage your credentials and login methods.
+                <label className="text-[11px] font-bold text-[var(--foreground-muted)] uppercase tracking-widest block mb-1">
+                  Supported Services (Comma Separated)
+                </label>
+                <input
+                  type="text"
+                  value={supportedServicesText}
+                  onChange={(e) => setSupportedServicesText(e.target.value)}
+                  placeholder="e.g. AC Repair, Furnace Tune-Up, Heat Pump Installation"
+                  className="w-full bg-[var(--background)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-sm focus:border-[var(--primary)] transition-all outline-none"
+                />
+                <p className="text-[11px] text-[var(--foreground-muted)] mt-1">
+                  The assistant will strictly offer only services in this catalog.
                 </p>
               </div>
-              <button
-                onClick={() => onNavigate && onNavigate("password_change")}
-                className="shrink-0 px-5 py-2.5 bg-[var(--background)] border border-[var(--border-color)] hover:border-[var(--primary)] hover:text-[var(--primary)] text-[var(--foreground)] text-xs font-bold uppercase tracking-wider rounded-xl transition-all"
-              >
-                Change Password
-              </button>
+
+              <div>
+                <label className="text-[11px] font-bold text-[var(--foreground-muted)] uppercase tracking-widest block mb-1">
+                  Explicitly Unsupported Services (Comma Separated)
+                </label>
+                <input
+                  type="text"
+                  value={unsupportedServicesText}
+                  onChange={(e) => setUnsupportedServicesText(e.target.value)}
+                  placeholder="e.g. Commercial Chillers, Duct Cleaning, Window Units"
+                  className="w-full bg-[var(--background)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-sm focus:border-[var(--primary)] transition-all outline-none"
+                />
+                <p className="text-[11px] text-[var(--foreground-muted)] mt-1">
+                  The assistant will explicitly inform callers that these jobs are not performed and will not book them.
+                </p>
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-[var(--foreground-muted)] uppercase tracking-widest block mb-1">
+                  Confirmed Service Area / ZIP Codes (Comma Separated)
+                </label>
+                <input
+                  type="text"
+                  value={serviceAreaText}
+                  onChange={(e) => setServiceAreaText(e.target.value)}
+                  placeholder="e.g. 78701, 78702, Austin, Round Rock"
+                  className="w-full bg-[var(--background)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-sm focus:border-[var(--primary)] transition-all outline-none"
+                />
+                <p className="text-[11px] text-[var(--foreground-muted)] mt-1">
+                  Inquiries outside these boundaries will be truthfully noted as requiring coverage confirmation.
+                </p>
+              </div>
             </div>
           </div>
         </div>
 
         {/* ================= RIGHT COLUMN ================= */}
         <div className="xl:col-span-5 flex flex-col gap-6">
-          <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl p-8 shadow-sm">
-            <h2 className="text-lg font-bold text-[var(--foreground)] tracking-tight border-b border-[var(--border-color)] pb-4 mb-6">
-              Financial Settings
-            </h2>
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold text-[var(--foreground-muted)] uppercase tracking-widest">
-                Average Job Value ($)
-              </label>
-              <input
-                type="number"
-                name="avgJobValue"
-                value={formData.avgJobValue}
-                onChange={handleInputChange}
-                placeholder="e.g. 1200"
-                className="w-full bg-[var(--background)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-sm focus:border-[var(--primary)] transition-all outline-none"
-              />
-            </div>
-          </div>
-
           {/* Operating Schedule */}
           <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl p-8 shadow-sm flex flex-col max-h-[800px]">
             <h2 className="text-lg font-bold text-[var(--foreground)] tracking-tight border-b border-[var(--border-color)] pb-4 mb-6">
-              Operating Schedule
+              Operating Schedule & Timezone
             </h2>
 
-            {/* TIME ZONE DROPDOWN (UPDATED WITH GMT) */}
+            {/* TIME ZONE DROPDOWN (IANA) */}
             <div className="mb-6 space-y-2">
               <label className="text-[11px] font-bold text-[var(--foreground-muted)] uppercase tracking-widest">
-                Time Zone
+                Tenant Time Zone (IANA)
               </label>
               <select
                 value={timezone}
@@ -406,6 +476,9 @@ export default function BusinessProfile({ onNavigate }) {
                   </option>
                 ))}
               </select>
+              <p className="text-[10px] text-[var(--foreground-muted)]">
+                Operating status and after-hours rules are calculated in this timezone.
+              </p>
             </div>
 
             <div className="space-y-3 overflow-y-auto pr-2 custom-scrollbar">
@@ -459,6 +532,26 @@ export default function BusinessProfile({ onNavigate }) {
                   </div>
                 );
               })}
+            </div>
+          </div>
+
+          {/* Account Security Section */}
+          <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl p-8 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-bold text-[var(--foreground)] tracking-tight">
+                  Account Security
+                </h2>
+                <p className="text-xs text-[var(--foreground-muted)] mt-1">
+                  Manage your credentials and login methods.
+                </p>
+              </div>
+              <button
+                onClick={() => onNavigate && onNavigate("password_change")}
+                className="shrink-0 px-5 py-2.5 bg-[var(--background)] border border-[var(--border-color)] hover:border-[var(--primary)] hover:text-[var(--primary)] text-[var(--foreground)] text-xs font-bold uppercase tracking-wider rounded-xl transition-all"
+              >
+                Change Password
+              </button>
             </div>
           </div>
         </div>

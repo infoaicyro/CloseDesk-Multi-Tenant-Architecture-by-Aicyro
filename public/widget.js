@@ -31,10 +31,23 @@
   const currentScript =
     document.currentScript ||
     document.querySelector('script[src*="widget.js"]');
-  const tenantId =
+  const rawTenantId =
     (currentScript && currentScript.getAttribute("data-tenant")) ||
-    window.__CLOSEDESK_TENANT_ID__ ||
-    "default";
+    window.__CLOSEDESK_TENANT_ID__;
+
+  if (!rawTenantId || typeof rawTenantId !== "string" || !rawTenantId.trim()) {
+    console.error(
+      "[CloseDesk SDK] Initialization failed: data-tenant attribute or window.__CLOSEDESK_TENANT_ID__ is required."
+    );
+    return;
+  }
+  const tenantId = rawTenantId.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "");
+  if (!tenantId) {
+    console.error(
+      "[CloseDesk SDK] Initialization failed: Invalid tenant ID format."
+    );
+    return;
+  }
 
   // 2. Derive base URL from the script source
   let baseUrl = window.__CLOSEDESK_BASE_URL__ || "";
@@ -621,36 +634,79 @@
 
   mount();
 
-  // 10. Handle Responsive Resizing via PostMessage
+  // 10. Handle Responsive Resizing via PostMessage (Hardened CD11)
   window.addEventListener("message", function (event) {
-    if (!event.data || typeof event.data !== "object") return;
-    if (event.data.type === "CLOSEDESK_WIDGET_RESIZE") {
-      const isMobile = window.innerWidth < 640;
-      if (event.data.isExpanded) {
-        if (isMobile) {
-          container.style.width = "100vw";
-          container.style.height = "100vh";
-          container.style.maxWidth = "100vw";
-          container.style.maxHeight = "100vh";
-          container.style.bottom = "0px";
-          container.style.right = "0px";
-        } else {
-          container.style.width = "420px";
-          container.style.height = "720px";
-          container.style.maxWidth = "95vw";
-          container.style.maxHeight = "95vh";
-          container.style.bottom = "20px";
-          container.style.right = "20px";
-        }
+    // 1. Strict origin validation: must match CloseDesk baseUrl
+    try {
+      const eventOrigin = new URL(event.origin).origin.toLowerCase();
+      const expectedOrigin = new URL(baseUrl).origin.toLowerCase();
+      if (eventOrigin !== expectedOrigin) {
+        return; // Untrusted origin, drop silently
+      }
+    } catch (_) {
+      return;
+    }
+
+    // 2. Source window verification: must be from our iframe if iframe has loaded
+    if (iframe && iframe.contentWindow && event.source !== iframe.contentWindow) {
+      return; // Spoofed window sender, reject
+    }
+
+    // 3. Payload integrity and Prototype Pollution defense
+    if (!event.data || typeof event.data !== "object" || Array.isArray(event.data)) {
+      return;
+    }
+
+    const hasOwn = Object.prototype.hasOwnProperty;
+    if (
+      hasOwn.call(event.data, "__proto__") ||
+      hasOwn.call(event.data, "constructor") ||
+      hasOwn.call(event.data, "prototype")
+    ) {
+      console.warn("[CloseDesk SDK] Dropping malicious postMessage payload: Prototype pollution attempt detected.");
+      return;
+    }
+
+    const payloadKeys = Object.keys(event.data);
+    for (let i = 0; i < payloadKeys.length; i++) {
+      const key = payloadKeys[i];
+      if (key === "__proto__" || key === "constructor" || key === "prototype") {
+        return;
+      }
+    }
+
+    // 4. Action and payload type verification
+    if (event.data.type !== "CLOSEDESK_WIDGET_RESIZE") {
+      return;
+    }
+
+    const isExpanded = event.data.isExpanded === true;
+    const hasPeek = event.data.hasPeek === true;
+
+    const isMobile = window.innerWidth < 640;
+    if (isExpanded) {
+      if (isMobile) {
+        container.style.width = "100vw";
+        container.style.height = "100vh";
+        container.style.maxWidth = "100vw";
+        container.style.maxHeight = "100vh";
+        container.style.bottom = "0px";
+        container.style.right = "0px";
       } else {
-        const isPeek = !!event.data.hasPeek;
-        container.style.width = isPeek ? "330px" : "280px";
-        container.style.height = isPeek ? "260px" : "96px";
+        container.style.width = "420px";
+        container.style.height = "720px";
         container.style.maxWidth = "95vw";
         container.style.maxHeight = "95vh";
         container.style.bottom = "20px";
         container.style.right = "20px";
       }
+    } else {
+      container.style.width = hasPeek ? "330px" : "280px";
+      container.style.height = hasPeek ? "260px" : "96px";
+      container.style.maxWidth = "95vw";
+      container.style.maxHeight = "95vh";
+      container.style.bottom = "20px";
+      container.style.right = "20px";
     }
   });
 })();

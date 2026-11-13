@@ -65,8 +65,35 @@ export default function HomeScreen({ onLogout }) {
         setIsLoading(false);
       },
       (error) => {
-        console.error("Error fetching leads:", error);
-        setIsLoading(false);
+        console.warn("Direct RTDB leads listener restricted, falling back to server-mediated API:", error);
+        const storedTenant = typeof window !== "undefined" ? localStorage.getItem("currentTenant") : null;
+        fetch(storedTenant && storedTenant !== "default" ? `/api/leads?tenant=${encodeURIComponent(storedTenant)}` : "/api/leads", {
+          headers: storedTenant && storedTenant !== "default" ? { "x-tenant-id": storedTenant } : {},
+        })
+          .then((r) => r.json())
+          .then((data) => {
+            const leadsObj = data.leads || data || {};
+            const leadsArray = Object.keys(leadsObj).map((key) => {
+              const l = leadsObj[key];
+              let formattedScore = "Low";
+              if (l.lead_score) {
+                formattedScore = l.lead_score.charAt(0).toUpperCase() + l.lead_score.slice(1).toLowerCase();
+              }
+              return {
+                ...l,
+                id: l.firebaseId || key,
+                name: l.name || "Anonymous",
+                timestamp: l.last_interaction_at || l.conversation_started_at || null,
+                lead_score: formattedScore,
+                booking_status: l.booking_status || "Captured",
+                email: l.email || "",
+                phone: l.phone || "",
+              };
+            }).sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+            setLeads(leadsArray);
+          })
+          .catch(() => {})
+          .finally(() => setIsLoading(false));
       }
     );
 

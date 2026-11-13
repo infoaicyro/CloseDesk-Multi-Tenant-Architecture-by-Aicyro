@@ -12,21 +12,21 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // 1. Feature Enablement & Config Gate
+  // 1. Extract initiating operator and tenant context from verified session
+  const session = await extractSession(req);
+  if (!session) {
+    return res.status(401).json({
+      error: "Authentication required to initiate Microsoft OAuth account linking.",
+    });
+  }
+
+  // 2. Feature Enablement & Config Gate
   const config = getProviderConfig("microsoft", req);
   if (!config.enabled) {
     return res.status(503).json({
       error: "Microsoft OAuth provider is not configured or disabled.",
       provider: "microsoft",
       status: "disabled",
-    });
-  }
-
-  // 2. Extract initiating operator and tenant context from verified session
-  const session = await extractSession(req);
-  if (!session) {
-    return res.status(401).json({
-      error: "Authentication required to initiate Microsoft OAuth account linking.",
     });
   }
 

@@ -1,6 +1,7 @@
 // src/lib/tenantResolver.js
 import { db } from "./firebase";
-import { ref, get } from "firebase/database";
+import { ref } from "firebase/database";
+import { safeDbGet } from "./safeDb";
 import { extractSession } from "./authSession";
 import { redactSensitiveSecrets } from "./sanitizer";
 
@@ -167,22 +168,68 @@ export async function getTenantConfig(tenantId = "default") {
   // If a specific tenant is requested, attempt to read their tenant partition
   if (safeId && safeId !== "default") {
     try {
-      const tenantRef = ref(db, `tenants/${safeId}`);
-      const snap = await get(tenantRef);
-      if (snap.exists()) {
-        const val = snap.val();
+      const [configSnap, appearSnap, botSnap, bizSnap, tenantRootSnap] = await Promise.all([
+        safeDbGet(ref(db, `tenants/${safeId}/config`)).catch(() => null),
+        safeDbGet(ref(db, `tenants/${safeId}/appearance`)).catch(() => null),
+        safeDbGet(ref(db, `tenants/${safeId}/chatbot_config`)).catch(() => null),
+        safeDbGet(ref(db, `tenants/${safeId}/business_profile`)).catch(() => null),
+        safeDbGet(ref(db, `tenants/${safeId}/enabled`)).catch(() => null),
+      ]);
+
+      const exists = Boolean(
+        (configSnap && configSnap.exists()) ||
+        (appearSnap && appearSnap.exists()) ||
+        (botSnap && botSnap.exists()) ||
+        (bizSnap && bizSnap.exists()) ||
+        (tenantRootSnap && tenantRootSnap.exists())
+      );
+
+      if (exists) {
+        const configVal = configSnap && configSnap.exists() ? configSnap.val() : {};
+        const appearVal = appearSnap && appearSnap.exists() ? appearSnap.val() : {};
+        const botVal = botSnap && botSnap.exists() ? botSnap.val() : {};
+        const bizVal = bizSnap && bizSnap.exists() ? bizSnap.val() : {};
+        const isEnabled = tenantRootSnap && tenantRootSnap.exists()
+          ? tenantRootSnap.val() === true
+          : configVal.enabled !== false;
+
         return {
           tenantId: safeId,
-          config: redactSensitiveSecrets(val.config || {}),
-          appearance: redactSensitiveSecrets(val.appearance || {}),
-          chatbotConfig: redactSensitiveSecrets(val.chatbot_config || val.config?.chatbot || {}),
-          businessProfile: redactSensitiveSecrets(val.business_profile || val.config?.business_profile || {}),
+          config: redactSensitiveSecrets(configVal),
+          appearance: redactSensitiveSecrets(appearVal),
+          chatbotConfig: redactSensitiveSecrets(botVal),
+          businessProfile: redactSensitiveSecrets(bizVal),
           isMultiTenant: true,
-          enabled: val.enabled !== false,
+          exists: true,
+          enabled: isEnabled,
         };
       }
+
+      // Explicit fail-close for non-existent tenant: NEVER fall back to default!
+      return {
+        tenantId: safeId,
+        config: {},
+        appearance: {},
+        chatbotConfig: {},
+        businessProfile: {},
+        isMultiTenant: true,
+        exists: false,
+        enabled: false,
+        error: `Tenant '${safeId}' does not exist or has been deleted.`,
+      };
     } catch (err) {
       console.warn(`[TenantResolver] Failed to fetch tenant partition for ${safeId}:`, err.message);
+      return {
+        tenantId: safeId,
+        config: {},
+        appearance: {},
+        chatbotConfig: {},
+        businessProfile: {},
+        isMultiTenant: true,
+        exists: false,
+        enabled: false,
+        error: `Error resolving tenant partition '${safeId}': ${err.message}`,
+      };
     }
   }
 
@@ -194,6 +241,7 @@ export async function getTenantConfig(tenantId = "default") {
     chatbotConfig: {},
     businessProfile: {},
     isMultiTenant: false,
+    exists: true,
     enabled: true,
   };
 }

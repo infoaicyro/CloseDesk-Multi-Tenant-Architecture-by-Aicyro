@@ -237,6 +237,25 @@ export default function BookingsScreen({ onLogout }) {
       const bookingPath = tenantId && tenantId !== "default" ? `tenants/${tenantId}/leads/${bookingId}` : `leads/${bookingId}`;
       const bookingRef = ref(db, bookingPath);
       await update(bookingRef, { booking_status: newStatus });
+
+      // CD10: Release authoritative slot lock when cancelled
+      if (newStatus === "Cancel" || newStatus === "Cancelled") {
+        const apptId = selectedBooking?.appointment_id || selectedBooking?.booking_details?.appointment_id;
+        if (apptId && typeof window !== "undefined") {
+          fetch("/api/appointments/cancel", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-tenant-id": tenantId,
+            },
+            body: JSON.stringify({
+              appointment_id: apptId,
+              reason: "Cancelled by operator via Dashboard",
+              actor: "operator",
+            }),
+          }).catch((e) => console.warn("Failed to cancel appointment slot lock:", e));
+        }
+      }
       setSelectedBooking((prev) => (prev && prev.id === bookingId ? { ...prev, status: newStatus, booking_status: newStatus } : prev));
     } catch (error) {
       console.error("Failed to update booking status:", error);
@@ -635,6 +654,18 @@ export default function BookingsScreen({ onLogout }) {
                       <span className="text-[var(--foreground-muted)] text-[11px] block uppercase tracking-wide">Device</span>
                       <span className="font-medium text-[var(--foreground)]">{selectedBooking.deviceName || "—"}</span>
                     </div>
+                    {selectedBooking.appointment_id && (
+                      <div>
+                        <span className="text-[var(--foreground-muted)] text-[11px] block uppercase tracking-wide">Appointment ID</span>
+                        <span className="font-mono text-xs text-[var(--primary)] font-bold">{selectedBooking.appointment_id}</span>
+                      </div>
+                    )}
+                    {selectedBooking.timezone && (
+                      <div>
+                        <span className="text-[var(--foreground-muted)] text-[11px] block uppercase tracking-wide">Timezone</span>
+                        <span className="font-medium text-[var(--foreground)]">{selectedBooking.timezone}</span>
+                      </div>
+                    )}
                   </div>
                 </section>
 

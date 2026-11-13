@@ -12,21 +12,21 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // 1. Feature Enablement & Config Gate
+  // 1. Extract initiating operator and tenant context from verified session
+  const session = await extractSession(req);
+  if (!session) {
+    return res.status(401).json({
+      error: "Authentication required to initiate Google OAuth account linking.",
+    });
+  }
+
+  // 2. Feature Enablement & Config Gate
   const config = getProviderConfig("google", req);
   if (!config.enabled) {
     return res.status(503).json({
       error: "Google OAuth provider is not configured or disabled.",
       provider: "google",
       status: "disabled",
-    });
-  }
-
-  // 2. Extract initiating operator and tenant context from verified session
-  const session = await extractSession(req);
-  if (!session) {
-    return res.status(401).json({
-      error: "Authentication required to initiate Google OAuth account linking.",
     });
   }
 
