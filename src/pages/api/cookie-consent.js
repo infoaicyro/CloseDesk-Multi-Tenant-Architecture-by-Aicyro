@@ -140,24 +140,28 @@ async function handler(req, res, apiLogger) {
             .trim()
             .substring(0, 45);
 
-    // Parse numeric coordinates safely for Google Maps markers
-    const numLat =
-      location && location.lat != null && !isNaN(Number(location.lat))
-        ? Number(location.lat)
-        : ipLocation && ipLocation.lat != null && !isNaN(Number(ipLocation.lat))
+    // UPDATED: Parse exact GPS and IP coordinates separately to prevent merging issues
+    const ipLat =
+      ipLocation && ipLocation.lat != null && !isNaN(Number(ipLocation.lat))
         ? Number(ipLocation.lat)
         : null;
+    const ipLng =
+      ipLocation && ipLocation.lng != null && !isNaN(Number(ipLocation.lng))
+        ? Number(ipLocation.lng)
+        : null;
 
-    const numLng =
+    const exactLat =
+      location && location.lat != null && !isNaN(Number(location.lat))
+        ? Number(location.lat)
+        : null;
+    const exactLng =
       location && location.lng != null && !isNaN(Number(location.lng))
         ? Number(location.lng)
-        : ipLocation && ipLocation.lng != null && !isNaN(Number(ipLocation.lng))
-        ? Number(ipLocation.lng)
         : null;
 
     const locationStatus =
       (location && location.status) ||
-      (consentStatus === "accepted" && numLat != null ? "allowed" : "rejected");
+      (consentStatus === "accepted" && exactLat != null ? "allowed" : "rejected");
 
     const payload = sanitizeForFirebase({
       id: String(safeAnonId),
@@ -171,13 +175,13 @@ async function handler(req, res, apiLogger) {
         city: String((ipLocation && ipLocation.city) || "Unknown").substring(0, 50),
         region: String((ipLocation && ipLocation.region) || "Unknown").substring(0, 50),
         country: String((ipLocation && ipLocation.country) || "Unknown").substring(0, 50),
-        lat: numLat,
-        lng: numLng,
+        lat: ipLat,
+        lng: ipLng,
       },
       location: {
         status: String(locationStatus).substring(0, 20),
-        lat: numLat,
-        lng: numLng,
+        lat: exactLat,
+        lng: exactLng,
       },
       language: String(language || "en-US").substring(0, 20),
       timeZone: String(timeZone || "UTC").substring(0, 40),

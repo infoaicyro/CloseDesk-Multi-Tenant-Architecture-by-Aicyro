@@ -78,6 +78,7 @@ const getIpAndLocation = async (txLogger = baseLogger) => {
 
 /**
  * Helper: Requests the user's location via the browser's Geolocation API.
+ * UPDATED: Includes enableHighAccuracy to force actual GPS coordinates.
  */
 const getUserLocation = (txLogger = baseLogger) => {
   return new Promise((resolve) => {
@@ -105,7 +106,11 @@ const getUserLocation = (txLogger = baseLogger) => {
           lng: null,
         });
       },
-      { timeout: 8000 }
+      {
+        enableHighAccuracy: true, // Forces exact GPS location
+        timeout: 15000,           // Give the GPS chip enough time to lock
+        maximumAge: 0,
+      }
     );
   });
 };
@@ -159,7 +164,7 @@ const executeSilentTracking = async (consentStatus) => {
 
 export default function CookieConsentBanner() {
   const [showBanner, setShowBanner] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isSaving] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
